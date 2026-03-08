@@ -1,0 +1,5 @@
+{
+  "name": "Guardian",
+  "description": "A safety-first navigation tool for Lebanon prioritizing secure routes over speed, optimized for emergency visibility and low-latency networks.",
+  "requestFramePermissions": ["geolocation"]
+}

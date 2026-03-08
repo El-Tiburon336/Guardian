@@ -1,11 +1,18 @@
-<div align="center">
+# Guardian
 
-<img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
+Guardian is a real-time safety and humanitarian aid mapping application designed for crisis response in Lebanon. It provides users with live alerts, safest route navigation, and a directory of essential services including hospitals, bakeries, pharmacies, and NGO aid centers.
 
-  <h1>Built with AI Studio</h2>
+## Features
 
-  <p>The fastest path from prompt to production with Gemini.</p>
+- **Live Danger Alerts**: Real-time reporting and visualization of security incidents.
+- **Safest Path Routing**: Navigation logic that avoids high-risk areas.
+- **Humanitarian Aid Layer**: Verified locations for LRC, Amel, Caritas, and UNRWA centers.
+- **Multi-language Support**: Full support for English, Arabic, and French.
+- **Offline Readiness**: Low-power mode and QR-based app sharing for connectivity-constrained environments.
 
-  <a href="https://aistudio.google.com/apps">Start building</a>
+## Tech Stack
 
-</div>
+- **Frontend**: React, TypeScript, Tailwind CSS
+- **Mapping**: Leaflet, React-Leaflet
+- **Animations**: Framer Motion
+- **Icons**: Lucide React
