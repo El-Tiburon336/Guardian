@@ -9,13 +9,14 @@ export interface District {
 
 export interface Alert {
   id: string;
-  type: 'danger' | 'warning' | 'info';
+  type: 'danger' | 'warning' | 'info' | 'airstrike';
   location: string;
   districtId: string;
   message: string;
   timestamp: string;
   coordinates: [number, number];
   verified: boolean;
+  isUserReported?: boolean;
 }
 
 export interface EssentialService {
@@ -49,14 +50,21 @@ export const initialAlerts: Alert[] = [
 export const essentialServices: EssentialService[] = [
   { id: 'h1', type: 'hospital', name: 'AUH Beirut', coordinates: [33.898, 35.481], status: 'open' },
   { id: 'h2', type: 'hospital', name: 'Nabatieh Govt Hospital', coordinates: [33.378, 35.484], status: 'limited' },
+  { id: 'h3', type: 'hospital', name: 'Hotel Dieu de France', coordinates: [33.882, 35.518], status: 'open' },
   { id: 'b1', type: 'bakery', name: 'Wooden Bakery Saida', coordinates: [33.561, 35.372], status: 'open' },
   { id: 'p1', type: 'pharmacy', name: 'Mazloum Pharmacy Tripoli', coordinates: [34.436, 35.835], status: 'open' },
   { id: 'f1', type: 'fuel', name: 'Medco Jounieh', coordinates: [33.982, 35.621], status: 'open' },
   { id: 't1', type: 'tools', name: 'Hardware Store Aley', coordinates: [33.806, 35.601], status: 'open' },
-  { id: 'n1', type: 'ngo', name: 'Lebanese Red Cross - Beirut', coordinates: [33.891, 35.506], status: 'open', aidType: 'medical', hours: '24/7' },
-  { id: 'n2', type: 'ngo', name: 'Food Bank Distribution - Tripoli', coordinates: [34.441, 35.828], status: 'open', aidType: 'food', hours: '08:00 - 16:00' },
-  { id: 'n3', type: 'ngo', name: 'UNHCR Reception Center - Tyre', coordinates: [33.275, 35.201], status: 'open', aidType: 'shelter', hours: '09:00 - 17:00' },
-  { id: 'n4', type: 'ngo', name: 'Amel Association - Nabatieh', coordinates: [33.382, 35.479], status: 'open', aidType: 'multi', hours: '08:30 - 15:30' },
+  // NGOs & Aid Centers
+  { id: 'lrc1', type: 'ngo', name: 'LRC Health Center - Baouchriyeh', coordinates: [33.885, 35.552], status: 'open', aidType: 'medical', hours: '24/7' },
+  { id: 'lrc2', type: 'ngo', name: 'LRC Health Center - Nabatiyeh', coordinates: [33.375, 35.482], status: 'open', aidType: 'medical', hours: '24/7' },
+  { id: 'lrc3', type: 'ngo', name: 'LRC Health Center - Saida', coordinates: [33.565, 35.375], status: 'open', aidType: 'medical', hours: '24/7' },
+  { id: 'amel1', type: 'ngo', name: 'Amel Community Center - Haret Hreik', coordinates: [33.845, 35.502], status: 'limited', aidType: 'multi', hours: '08:00 - 16:00' },
+  { id: 'amel2', type: 'ngo', name: 'Amel Community Center - Tyre', coordinates: [33.272, 35.203], status: 'open', aidType: 'multi', hours: '08:00 - 16:00' },
+  { id: 'caritas1', type: 'ngo', name: 'Caritas Center - Akkar', coordinates: [34.545, 36.078], status: 'open', aidType: 'food', hours: '09:00 - 17:00' },
+  { id: 'caritas2', type: 'ngo', name: 'Caritas Center - Zahle', coordinates: [33.848, 35.902], status: 'open', aidType: 'shelter', hours: '09:00 - 17:00' },
+  { id: 'unrwa1', type: 'ngo', name: 'UNRWA Shelter - Siblin', coordinates: [33.625, 35.452], status: 'open', aidType: 'shelter', hours: '24/7' },
+  { id: 'unrwa2', type: 'ngo', name: 'UNRWA Shelter - Nahr el-Bared', coordinates: [34.512, 35.965], status: 'limited', aidType: 'shelter', hours: '24/7' },
 ];
 
 // Comprehensive list of Lebanese villages/towns for search
@@ -74,9 +82,7 @@ export const lebanonLocations = [
   { name: 'Bint Jbeil', ar: 'بنت جبيل', coords: [33.1219, 35.4356] },
   { name: 'Khiam', ar: 'الخيام', coords: [33.3167, 35.6083] },
   { name: 'Marjayoun', ar: 'مرجعيون', coords: [33.3556, 35.5917] },
-  { name: 'Chouf', ar: 'الشوف', coords: [33.6958, 35.5775] },
-  { name: 'Batroun', ar: 'البترون', coords: [34.2553, 35.6581] },
-  { name: 'Zgharta', ar: 'زغرتا', coords: [34.3986, 35.8939] },
+  { name: 'Arsal', ar: 'عرسال', coords: [34.1833, 36.4167] },
   { name: 'Hermel', ar: 'الهرمل', coords: [34.3939, 36.3847] },
   { name: 'Rachaya', ar: 'راشيا', coords: [33.5014, 35.8444] },
   { name: 'Hasbaya', ar: 'حاصبيا', coords: [33.3972, 35.6861] },
@@ -90,6 +96,10 @@ export const lebanonLocations = [
   { name: 'Ansar', ar: 'أنصار', coords: [33.33, 35.43] },
   { name: 'Kfar Kila', ar: 'كفركلا', coords: [33.33, 35.55] },
   { name: 'Meiss el Jabal', ar: 'ميس الجبل', coords: [33.25, 35.51] },
+  { name: 'Damour', ar: 'الدامور', coords: [33.7333, 35.45] },
+  { name: 'Chekka', ar: 'شكا', coords: [34.3333, 35.7167] },
+  { name: 'Zgharta', ar: 'زغرتا', coords: [34.3986, 35.8939] },
+  { name: 'Batroun', ar: 'البترون', coords: [34.2553, 35.6581] },
 ];
 
 export function useSafetyData() {

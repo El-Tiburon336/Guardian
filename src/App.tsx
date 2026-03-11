@@ -26,8 +26,10 @@ import {
   QrCode,
   Info,
   ShieldCheck,
-  HandHeart
+  HandHeart,
+  Flame
 } from 'lucide-react';
+import { GoogleGenAI, Type } from "@google/genai";
 import { QRCodeCanvas } from 'qrcode.react';
 import { motion, AnimatePresence } from 'motion/react';
 import { 
@@ -101,13 +103,14 @@ const TRANSLATIONS: Record<Language, any> = {
     language: "Language",
     theme: "Appearance",
     allResources: "All Resources",
+    airstrikes: "Airstrikes",
     hospitals: "Hospitals",
     bakeries: "Bakeries",
     pharmacies: "Pharmacies",
     fuel: "Fuel Stations",
     tools: "Tools",
     ngo: "NGOs/Aid",
-    requestAid: "Request Help/NGO Support",
+    requestAid: "Request Humanitarian Aid",
     aidType: "Aid Type",
     food: "Food",
     medical: "Medical",
@@ -120,10 +123,15 @@ const TRANSLATIONS: Record<Language, any> = {
     showQR: "Show QR",
     offlineShare: "Share with others offline",
     dangerZone: "DANGER ZONE",
+    dangerLevel: "Danger Level",
+    airstrike: "Airstrike/Shelling",
     verified_ago: "Verified {time} ago",
+    reported_ago: "Reported {time} ago",
+    userVerified: "Community Verified",
     operational: "Operational",
     limited: "Limited Service",
     closed: "Closed",
+    lrcEmergency: "LRC Emergency: 140",
     safetyDisclaimerTitle: "Safety Disclaimer",
     safetyDisclaimerMessage: "This app provides safety data for informational purposes only. Always prioritize local authorities' instructions. Stay safe.",
     districts: {
@@ -145,7 +153,7 @@ const TRANSLATIONS: Record<Language, any> = {
     emergency: "طوارئ",
     searchPlaceholder: "ابحث عن قرية، مدينة أو عنوان...",
     offlineReady: "جاهز للعمل دون اتصال",
-    liveSafetyFeed: "موجز الأمان المباشر",
+    liveSafetyFeed: "بلاغات الأمان المباشرة",
     lowBandwidth: "وضع النطاق الترددي المنخفض",
     optimized3G: "محسن لشبكات 3G",
     startPoint: "نقطة البداية",
@@ -171,13 +179,14 @@ const TRANSLATIONS: Record<Language, any> = {
     language: "اللغة",
     theme: "المظهر",
     allResources: "جميع الموارد",
-    hospitals: "مستشفيات",
+    airstrikes: "غارات جوية",
+    hospitals: "مشافي",
     bakeries: "أفران",
     pharmacies: "صيدليات",
     fuel: "محطات وقود",
     tools: "أدوات",
-    ngo: "منظمات غير حكومية",
-    requestAid: "طلب مساعدة / دعم منظمة",
+    ngo: "منظمات",
+    requestAid: "طلب مساعدات إنسانية",
     aidType: "نوع المساعدة",
     food: "طعام",
     medical: "طبي",
@@ -190,10 +199,15 @@ const TRANSLATIONS: Record<Language, any> = {
     showQR: "عرض الرمز",
     offlineShare: "مشاركة مع الآخرين دون اتصال",
     dangerZone: "منطقة خطر",
+    dangerLevel: "مستوى الخطر",
+    airstrike: "غارة جوية / قصف",
     verified_ago: "تم التحقق منذ {time}",
+    reported_ago: "تم التبليغ منذ {time}",
+    userVerified: "تم التحقق من المجتمع",
     operational: "قيد الخدمة",
     limited: "خدمة محدودة",
     closed: "مغلق",
+    lrcEmergency: "طوارئ الصليب الأحمر: ١٤٠",
     safetyDisclaimerTitle: "إخلاء مسؤولية الأمان",
     safetyDisclaimerMessage: "يوفر هذا التطبيق بيانات الأمان لأغراض إعلامية فقط. أعطِ الأولوية دائماً لتعليمات السلطات المحلية. ابقَ آمناً.",
     districts: {
@@ -215,7 +229,7 @@ const TRANSLATIONS: Record<Language, any> = {
     emergency: "URGENCE",
     searchPlaceholder: "Chercher un village, ville...",
     offlineReady: "Prêt Hors Ligne",
-    liveSafetyFeed: "Flux de Sécurité en Direct",
+    liveSafetyFeed: "Signalements en Direct",
     lowBandwidth: "Mode Basse Bande",
     optimized3G: "Optimisé pour la 3G",
     startPoint: "Point de Départ",
@@ -241,13 +255,14 @@ const TRANSLATIONS: Record<Language, any> = {
     language: "Langue",
     theme: "Apparence",
     allResources: "Toutes les ressources",
+    airstrikes: "Frappes Aériennes",
     hospitals: "Hôpitaux",
     bakeries: "Boulangeries",
     pharmacies: "Pharmacies",
     fuel: "Stations-service",
     tools: "Outils",
-    ngo: "ONG / Aide",
-    requestAid: "Demander de l'aide / Soutien ONG",
+    ngo: "ONG",
+    requestAid: "Demander de l'aide humanitaire",
     aidType: "Type d'aide",
     food: "Nourriture",
     medical: "Médical",
@@ -260,10 +275,15 @@ const TRANSLATIONS: Record<Language, any> = {
     showQR: "Afficher le QR",
     offlineShare: "Partager hors ligne",
     dangerZone: "ZONE DE DANGER",
+    dangerLevel: "Niveau de Danger",
+    airstrike: "Frappe Aérienne / Bombardement",
     verified_ago: "Vérifié il y a {time}",
+    reported_ago: "Signalé il y a {time}",
+    userVerified: "Vérifié par la Communauté",
     operational: "Opérationnel",
     limited: "Service Limité",
     closed: "Fermé",
+    lrcEmergency: "Urgence Croix-Rouge: 140",
     safetyDisclaimerTitle: "Avis de sécurité",
     safetyDisclaimerMessage: "Cette application fournit des données de sécurité à titre informatif uniquement. Priorisez toujours les instructions des autorités locales. Restez en sécurité.",
     districts: {
@@ -280,9 +300,9 @@ const TRANSLATIONS: Record<Language, any> = {
 };
 
 const DANGER_TYPES: Record<Language, string[]> = {
-  en: ["Shelling/Air Strike", "Road Block", "Gunfire", "Checkpoint", "Resource Update", "Request Help/NGO Support"],
-  ar: ["قصف / غارة جوية", "قطع طريق", "إطلاق نار", "حاجز أمني", "تحديث الموارد", "طلب مساعدة / دعم منظمة"],
-  fr: ["Bombardement / Frappe Aérienne", "Barrage Routier", "Fusillade", "Point de Contrôle", "Mise à jour des ressources", "Demande d'aide / Soutien ONG"]
+  en: ["Airstrike/Shelling", "Road Block", "Gunfire", "Checkpoint", "Resource Update", "Request Humanitarian Aid"],
+  ar: ["غارة جوية / قصف", "قطع طريق", "إطلاق نار", "حاجز أمني", "تحديث الموارد", "طلب مساعدات إنسانية"],
+  fr: ["Frappe Aérienne / Bombardement", "Barrage Routier", "Fusillade", "Point de Contrôle", "Mise à jour des ressources", "Demande d'aide humanitaire"]
 };
 
 // --- Static Utilities & Icons ---
@@ -298,6 +318,20 @@ const dangerIcon = L.divIcon({
   className: 'danger-icon',
   iconSize: [20, 20],
   iconAnchor: [10, 10],
+});
+
+const warningIcon = L.divIcon({
+  html: `<div style="background-color: #FF9500; width: 16px; height: 16px; border-radius: 50%; border: 2px solid white; box-shadow: 0 0 8px rgba(255,149,0,0.4);"></div>`,
+  className: 'warning-icon',
+  iconSize: [16, 16],
+  iconAnchor: [8, 8],
+});
+
+const infoIcon = L.divIcon({
+  html: `<div style="background-color: #007AFF; width: 16px; height: 16px; border-radius: 50%; border: 2px solid white; box-shadow: 0 0 8px rgba(0,122,255,0.4);"></div>`,
+  className: 'info-icon',
+  iconSize: [16, 16],
+  iconAnchor: [8, 8],
 });
 
 // --- Map Components ---
@@ -326,22 +360,26 @@ const MapClickHandler = ({ isReportingMode, onMapClick }: { isReportingMode: boo
   return null;
 };
 
-const MapUpdater = ({ focusedAlertId, alerts }: { focusedAlertId: string | null, alerts: Alert[] }) => {
+const MapUpdater = ({ focusedAlertId, alerts, searchLocation }: { focusedAlertId: string | null, alerts: Alert[], searchLocation: [number, number] | null }) => {
   const map = useMap();
   useEffect(() => {
-    if (!map || !focusedAlertId) return;
-    const alert = alerts.find(a => a.id === focusedAlertId);
-    if (alert) map.setView(alert.coordinates, 14);
-  }, [map, focusedAlertId, alerts]);
+    if (!map) return;
+    if (focusedAlertId) {
+      const alert = alerts.find(a => a.id === focusedAlertId);
+      if (alert) map.setView(alert.coordinates, 14);
+    } else if (searchLocation) {
+      map.setView(searchLocation, 12);
+    }
+  }, [map, focusedAlertId, alerts, searchLocation]);
   return null;
 };
 
-const PulseCircle = ({ center, pulse, lowPowerMode }: { center: [number, number], pulse: number, lowPowerMode: boolean }) => {
+const PulseCircle = ({ center, pulse, lowPowerMode, color = '#FF3B30' }: { center: [number, number], pulse: number, lowPowerMode: boolean, color?: string }) => {
   if (lowPowerMode) return (
     <Circle 
       center={center} 
       radius={500} 
-      pathOptions={{ fillColor: '#FF3B30', fillOpacity: 0.3, strokeWeight: 1, color: '#FF3B30' }} 
+      pathOptions={{ fillColor: color, fillOpacity: 0.3, strokeWeight: 1, color: color }} 
     />
   );
   return (
@@ -349,7 +387,7 @@ const PulseCircle = ({ center, pulse, lowPowerMode }: { center: [number, number]
       center={center}
       radius={500 * pulse}
       pathOptions={{
-        fillColor: '#FF3B30',
+        fillColor: color,
         fillOpacity: 0.4 * (1.5 - pulse),
         strokeWeight: 0
       }}
@@ -375,7 +413,7 @@ interface MapComponentProps {
 const ZoomControls = ({ isRTL }: { isRTL: boolean }) => {
   const map = useMap();
   return (
-    <div className={`leaflet-top ${isRTL ? 'leaflet-left' : 'leaflet-right'} mt-24 mr-4 ml-4 pointer-events-auto`}>
+    <div className={`leaflet-top ${isRTL ? 'leaflet-left' : 'leaflet-right'} mt-24 ${isRTL ? 'ml-4' : 'mr-4'} pointer-events-auto`}>
       <div className="leaflet-control leaflet-bar border-none shadow-2xl flex flex-col">
         <button 
           onClick={(e) => { e.stopPropagation(); map.zoomIn(); }} 
@@ -395,10 +433,24 @@ const ZoomControls = ({ isRTL }: { isRTL: boolean }) => {
 };
 
 const MapComponent = React.memo(({ 
-  theme, alerts, services, activeFilter, routePath, focusedAlertId, setFocusedAlertId, onBoundsChange, isReportingMode, onMapClick, lowPowerMode
+  theme, alerts, services, activeFilter, routePath, focusedAlertId, setFocusedAlertId, onBoundsChange, isReportingMode, onMapClick, lowPowerMode, searchLocation, onZoom
 }: any) => {
   const { t, language, isRTL } = useLanguage();
   const [pulse, setPulse] = useState(1);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setPulse(p => p === 1 ? 1.2 : 1);
+    }, 1000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const MapEvents = () => {
+    useMapEvents({
+      zoomend: () => onZoom?.(),
+    });
+    return null;
+  };
 
   useEffect(() => {
     if (lowPowerMode) return;
@@ -414,7 +466,8 @@ const MapComponent = React.memo(({
         <MapResizeHandler />
         <MapBoundsHandler onBoundsChange={onBoundsChange} />
         <MapClickHandler isReportingMode={isReportingMode} onMapClick={onMapClick} />
-        <MapUpdater focusedAlertId={focusedAlertId} alerts={alerts} />
+        <MapUpdater focusedAlertId={focusedAlertId} alerts={alerts} searchLocation={searchLocation} />
+        <MapEvents />
         <TileLayer
           url={theme === 'dark' 
             ? `https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png?lang=${language}` 
@@ -424,21 +477,29 @@ const MapComponent = React.memo(({
         
         <ZoomControls isRTL={isRTL} />
 
-        {alerts.filter(a => a.type === 'danger').map(alert => (
+        {alerts.filter(a => activeFilter === 'airstrike' ? a.type === 'airstrike' : true).map(alert => (
           <Fragment key={alert.id}>
-            <PulseCircle center={alert.coordinates} pulse={pulse} lowPowerMode={lowPowerMode} />
+            {(alert.type === 'danger' || alert.type === 'airstrike') && (
+              <PulseCircle center={alert.coordinates} pulse={pulse} lowPowerMode={lowPowerMode} color={alert.type === 'airstrike' ? '#FF3B30' : '#FF3B30'} />
+            )}
             <Marker
               position={alert.coordinates}
-              icon={dangerIcon}
+              icon={alert.type === 'airstrike' ? createCustomIcon('🔥', '#FF3B30') : alert.type === 'danger' ? dangerIcon : alert.type === 'warning' ? warningIcon : infoIcon}
               eventHandlers={{ click: () => setFocusedAlertId(alert.id) }}
             >
               <Popup>
                 <div className="p-2 min-w-[200px]" dir={isRTL ? 'rtl' : 'ltr'}>
-                  <p className="text-[10px] font-black uppercase tracking-widest text-danger mb-1">{t.dangerZone}</p>
+                  <p className={`text-[10px] font-black uppercase tracking-widest mb-1 ${alert.type === 'airstrike' || alert.type === 'danger' ? 'text-danger' : 'text-warning'}`}>
+                    {alert.type === 'airstrike' ? t.airstrikes : t.dangerZone}
+                  </p>
                   <p className="font-bold text-sm mb-2">{alert.message}</p>
                   <div className="flex items-center justify-between border-t pt-2">
-                    <span className="text-[10px] font-bold text-zinc-500 uppercase">{t.verified}</span>
-                    <span className="text-[10px] font-mono font-bold">{t.verified_ago.replace('{time}', alert.timestamp)}</span>
+                    <span className="text-[10px] font-bold text-zinc-500 uppercase">
+                      {alert.isUserReported ? t.userVerified : t.verified}
+                    </span>
+                    <span className="text-[10px] font-mono font-bold">
+                      {alert.type === 'airstrike' ? t.reported_ago.replace('{time}', alert.timestamp) : t.verified_ago.replace('{time}', alert.timestamp)}
+                    </span>
                   </div>
                 </div>
               </Popup>
@@ -480,6 +541,11 @@ const MapComponent = React.memo(({
                         <span className="text-zinc-500 uppercase font-bold">{t.hours}:</span>
                         <span className="font-bold">{service.hours}</span>
                       </div>
+                      {service.name.includes('LRC') && (
+                        <div className="mt-2 p-2 bg-danger/10 rounded-lg text-center">
+                          <p className="text-[10px] font-black text-danger uppercase tracking-widest">{t.lrcEmergency}</p>
+                        </div>
+                      )}
                     </div>
                   )}
                 </div>
@@ -513,10 +579,10 @@ const Sidebar = React.memo(({
         >
           {isMobile && <div className="flex justify-center p-4"><div className="w-12 h-1.5 bg-zinc-800 rounded-full" /></div>}
           <div className="p-6 flex flex-col h-full">
-            <div className={`flex items-center justify-between mb-8 ${isRTL ? 'flex-row-reverse' : ''}`}>
+            <div className="flex items-center justify-between mb-8">
               <div className="flex items-center gap-3">
                 <div className="bg-danger p-2 rounded-xl shadow-[0_0_15px_rgba(255,59,48,0.4)]"><ShieldAlert className="text-black w-6 h-6" /></div>
-                <h1 className="text-2xl font-black tracking-tighter uppercase italic">{t.name}</h1>
+                <h1 className="text-2xl font-black tracking-tighter uppercase italic text-left" style={{ textAlign: 'left' }}>GUARDIAN</h1>
               </div>
               <motion.button whileTap={{ scale: 0.9 }} onClick={() => setIsSidebarOpen(false)} className={`p-2 rounded-xl ${theme === 'dark' ? 'hover:bg-white/5' : 'hover:bg-zinc-100'}`}><X className="w-5 h-5" /></motion.button>
             </div>
@@ -561,11 +627,63 @@ const Sidebar = React.memo(({
 export default function App() {
   const { districts, alerts, services, addAlert, locations } = useSafetyData();
   const [language, setLanguage] = useState<Language>(() => (localStorage.getItem('guardian-lang') as Language) || 'en');
+  
+  const genAI = useMemo(() => process.env.GEMINI_API_KEY ? new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY }) : null, []);
+
+  const fetchCrisisData = useCallback(async () => {
+    if (!genAI) return;
+    try {
+      const response = await genAI.models.generateContent({
+        model: "gemini-3-flash-preview",
+        contents: "Simulate a Telegram/RSS feed scanner for Lebanon. Summarize 2-3 realistic recent airstrike reports from verified sources in South Lebanon, Bekaa, and Beirut Dahiya. Return JSON array of objects with location, districtId (beirut, dahieh, tyre, nabatieh, baalbek), message, coordinates [lat, lng], timestamp (e.g. '5m').",
+        config: {
+          responseMimeType: "application/json",
+          responseSchema: {
+            type: Type.ARRAY,
+            items: {
+              type: Type.OBJECT,
+              properties: {
+                location: { type: Type.STRING },
+                districtId: { type: Type.STRING },
+                message: { type: Type.STRING },
+                coordinates: { type: Type.ARRAY, items: { type: Type.NUMBER } },
+                timestamp: { type: Type.STRING }
+              },
+              required: ["location", "districtId", "message", "coordinates", "timestamp"]
+            }
+          }
+        }
+      });
+
+      const data = JSON.parse(response.text);
+      data.forEach((report: any) => {
+        addAlert({
+          type: 'airstrike',
+          location: report.location,
+          districtId: report.districtId,
+          message: report.message,
+          coordinates: report.coordinates as [number, number],
+          timestamp: report.timestamp,
+          isUserReported: false
+        } as any);
+      });
+    } catch (error) {
+      console.error("Crisis data fetch failed:", error);
+    }
+  }, [addAlert, genAI]);
+
+  useEffect(() => {
+    fetchCrisisData();
+    const interval = setInterval(fetchCrisisData, 300000); // Every 5 mins
+    return () => clearInterval(interval);
+  }, [fetchCrisisData]);
+
   const [theme, setTheme] = useState<Theme>(() => (localStorage.getItem('guardian-theme') as Theme) || 'dark');
   const [lowPowerMode, setLowPowerMode] = useState(() => localStorage.getItem('guardian-lowpower') === 'true');
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
+  const [searchLocation, setSearchLocation] = useState<[number, number] | null>(null);
   const [activeFilter, setActiveFilter] = useState<string | null>(null);
   const [startDistrict, setStartDistrict] = useState('');
   const [endDistrict, setEndDistrict] = useState('');
@@ -579,6 +697,18 @@ export default function App() {
   const [shareToast, setShareToast] = useState(false);
   const [showWelcome, setShowWelcome] = useState(false);
   const [isQRModalOpen, setIsQRModalOpen] = useState(false);
+
+  useEffect(() => {
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/sw.js').then(reg => {
+          console.log('SW registered:', reg);
+        }).catch(err => {
+          console.log('SW registration failed:', err);
+        });
+      });
+    }
+  }, []);
 
   const t = useMemo(() => TRANSLATIONS[language], [language]);
   const isRTL = useMemo(() => language === 'ar', [language]);
@@ -678,9 +808,13 @@ export default function App() {
                   {searchResults.length > 0 && (
                     <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 10 }} className={`absolute top-full left-0 right-0 mt-2 rounded-2xl border shadow-2xl overflow-hidden z-[1200] ${theme === 'dark' ? 'bg-zinc-900 border-white/10' : 'bg-white border-zinc-200'}`}>
                       {searchResults.map((loc, i) => (
-                        <button key={i} onClick={() => { setSearchQuery(''); /* map.setView(loc.coords, 12) */ }} className={`w-full p-4 text-left flex items-center gap-3 hover:bg-zinc-800 transition-colors ${i !== searchResults.length - 1 ? 'border-b border-white/5' : ''}`}>
+                        <button key={i} onClick={() => { 
+                          setSearchQuery(''); 
+                          setFocusedAlertId(null);
+                          setSearchLocation(loc.coords as [number, number]);
+                        }} className={`w-full p-4 text-left flex items-center gap-3 hover:bg-zinc-800 transition-colors ${i !== searchResults.length - 1 ? 'border-b border-white/5' : ''} ${isRTL ? 'flex-row-reverse text-right' : ''}`}>
                           <MapPin className="w-4 h-4 text-zinc-500" />
-                          <div><p className="text-sm font-bold">{loc.name}</p><p className="text-[10px] text-zinc-500">{loc.ar}</p></div>
+                          <div><p className="text-sm font-bold">{language === 'ar' ? loc.ar : (language === 'fr' && loc.fr ? loc.fr : loc.name)}</p><p className="text-[10px] text-zinc-500">{language === 'en' ? loc.ar : loc.name}</p></div>
                         </button>
                       ))}
                     </motion.div>
@@ -692,6 +826,12 @@ export default function App() {
               </div>
             </div>
             <div className="flex gap-2 overflow-x-auto no-scrollbar pb-1">
+              <button 
+                onClick={() => setActiveFilter(activeFilter === 'airstrike' ? null : 'airstrike')} 
+                className={`flex items-center gap-2 px-4 py-2 rounded-full border text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap ${activeFilter === 'airstrike' ? 'bg-danger text-black border-danger shadow-[0_0_15px_rgba(255,59,48,0.4)]' : 'bg-white/5 border-white/10 text-zinc-400 hover:border-white/30'}`}
+              >
+                <Flame className="w-3 h-3" />{t.airstrikes}
+              </button>
               <button onClick={() => setActiveFilter(activeFilter === 'all' ? null : 'all')} className={`flex items-center gap-2 px-4 py-2 rounded-full border text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap ${activeFilter === 'all' ? 'bg-white text-black border-white' : 'bg-white/5 border-white/10 text-zinc-400 hover:border-white/30'}`}><Shield className="w-3 h-3" />{t.allResources}</button>
               {['hospital', 'bakery', 'pharmacy', 'fuel', 'tools', 'ngo'].map(type => (
                 <button key={type} onClick={() => setActiveFilter(activeFilter === type ? null : type)} className={`flex items-center gap-2 px-4 py-2 rounded-full border text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap ${activeFilter === type ? 'bg-white text-black border-white' : 'bg-white/5 border-white/10 text-zinc-400 hover:border-white/30'}`}>
@@ -712,7 +852,8 @@ export default function App() {
           <MapComponent 
             theme={theme} alerts={alerts} services={services} activeFilter={activeFilter} routePath={routePath} 
             focusedAlertId={focusedAlertId} setFocusedAlertId={setFocusedAlertId} onBoundsChange={setMapBounds} 
-            isReportingMode={isReportingMode} onMapClick={handleMapClick} lowPowerMode={lowPowerMode}
+            isReportingMode={isReportingMode} onMapClick={handleMapClick} lowPowerMode={lowPowerMode || activeFilter === 'airstrike'}
+            searchLocation={searchLocation} onZoom={fetchCrisisData}
           />
           
           {isReportingMode && (
@@ -821,13 +962,16 @@ export default function App() {
                   <button 
                     onClick={() => { 
                       const isAidRequest = selectedDangerType.includes('Aid') || selectedDangerType.includes('مساعدة') || selectedDangerType.includes('aide');
+                      const isAirstrike = selectedDangerType.includes('Airstrike') || selectedDangerType.includes('غارة') || selectedDangerType.includes('Frappe');
                       addAlert({ 
-                        type: isAidRequest ? 'info' : 'danger', 
+                        type: isAirstrike ? 'airstrike' : isAidRequest ? 'info' : 'danger', 
                         location: 'User Reported', 
                         districtId: 'dahieh', 
                         message: selectedDangerType, 
-                        coordinates: [33.85, 35.50] 
-                      }); 
+                        coordinates: [33.85, 35.50],
+                        isUserReported: true,
+                        timestamp: 'Just now'
+                      } as any); 
                       setIsReportModalOpen(false); 
                       setSelectedDangerType('');
                     }} 
