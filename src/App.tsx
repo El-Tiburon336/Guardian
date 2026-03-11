@@ -1,5 +1,8 @@
 import React, { useState, useEffect, useMemo, Fragment, useCallback } from 'react';
 import { 
+  Phone,
+  MessageSquare,
+  LifeBuoy,
   ShieldAlert, 
   Search, 
   Navigation, 
@@ -125,6 +128,11 @@ const TRANSLATIONS: Record<Language, any> = {
     dangerZone: "DANGER ZONE",
     dangerLevel: "Danger Level",
     airstrike: "Airstrike/Shelling",
+    emergencyContacts: "EMERGENCY CONTACTS",
+    lrc: "Red Cross",
+    civilDefense: "Civil Defense",
+    shareLocation: "Share My Location",
+    whatsappMessage: "Emergency! My current location is: ",
     verified_ago: "Verified {time} ago",
     reported_ago: "Reported {time} ago",
     userVerified: "Community Verified",
@@ -201,6 +209,11 @@ const TRANSLATIONS: Record<Language, any> = {
     dangerZone: "منطقة خطر",
     dangerLevel: "مستوى الخطر",
     airstrike: "غارة جوية / قصف",
+    emergencyContacts: "جهات اتصال الطوارئ",
+    lrc: "الصليب الأحمر",
+    civilDefense: "الدفاع المدني",
+    shareLocation: "مشاركة موقعي",
+    whatsappMessage: "طوارئ! موقعي الحالي هو: ",
     verified_ago: "تم التحقق منذ {time}",
     reported_ago: "تم التبليغ منذ {time}",
     userVerified: "تم التحقق من المجتمع",
@@ -226,7 +239,7 @@ const TRANSLATIONS: Record<Language, any> = {
     safetyStatus: "État de Sécurité",
     findSafestPath: "Trouver le chemin le plus sûr",
     reportDanger: "Signaler un danger",
-    emergency: "URGENCE",
+    emergency: "Urgences",
     searchPlaceholder: "Chercher un village, ville...",
     offlineReady: "Prêt Hors Ligne",
     liveSafetyFeed: "Signalements en Direct",
@@ -277,6 +290,11 @@ const TRANSLATIONS: Record<Language, any> = {
     dangerZone: "ZONE DE DANGER",
     dangerLevel: "Niveau de Danger",
     airstrike: "Frappe Aérienne / Bombardement",
+    emergencyContacts: "CONTACTS D'URGENCE",
+    lrc: "Croix-Rouge",
+    civilDefense: "Défense Civile",
+    shareLocation: "Partager ma position",
+    whatsappMessage: "Urgence ! Ma position actuelle est : ",
     verified_ago: "Vérifié il y a {time}",
     reported_ago: "Signalé il y a {time}",
     userVerified: "Vérifié par la Communauté",
@@ -447,7 +465,7 @@ const MapComponent = React.memo(({
 
   const MapEvents = () => {
     useMapEvents({
-      zoomend: () => onZoom?.(),
+      // Removed onZoom to prevent rate limit exhaustion
     });
     return null;
   };
@@ -564,7 +582,7 @@ const MapComponent = React.memo(({
 
 // --- Sidebar ---
 const Sidebar = React.memo(({
-  isSidebarOpen, isMobile, theme, setIsSidebarOpen, setIsReportModalOpen, filteredAlerts, focusedAlertId, setFocusedAlertId, getDistrictName
+  isSidebarOpen, isMobile, theme, setIsSidebarOpen, setIsReportModalOpen, filteredAlerts, focusedAlertId, setFocusedAlertId, getDistrictName, isBackoffActive
 }: any) => {
   const { t, isRTL } = useLanguage();
   return (
@@ -587,6 +605,51 @@ const Sidebar = React.memo(({
               <motion.button whileTap={{ scale: 0.9 }} onClick={() => setIsSidebarOpen(false)} className={`p-2 rounded-xl ${theme === 'dark' ? 'hover:bg-white/5' : 'hover:bg-zinc-100'}`}><X className="w-5 h-5" /></motion.button>
             </div>
             <div className="flex-1 overflow-y-auto no-scrollbar space-y-6">
+            <div className="space-y-3">
+              <h3 className="text-[10px] font-black uppercase tracking-widest text-danger px-2">{t.emergencyContacts}</h3>
+              <div className="grid grid-cols-2 gap-2">
+                <motion.a 
+                  whileTap={{ scale: 0.95 }}
+                  href="tel:140"
+                  className={`flex flex-col items-center justify-center p-3 rounded-2xl border ${theme === 'dark' ? 'bg-danger/10 border-danger/30 hover:bg-danger/20' : 'bg-red-50 border-red-100 hover:bg-red-100'} transition-all`}
+                >
+                  <div className="bg-danger p-2 rounded-lg mb-2"><Phone className="w-4 h-4 text-black" /></div>
+                  <span className="text-[10px] font-black uppercase tracking-tighter">{t.lrc}</span>
+                  <span className="text-xs font-black">140</span>
+                </motion.a>
+                <motion.a 
+                  whileTap={{ scale: 0.95 }}
+                  href="tel:125"
+                  className={`flex flex-col items-center justify-center p-3 rounded-2xl border ${theme === 'dark' ? 'bg-danger/10 border-danger/30 hover:bg-danger/20' : 'bg-red-50 border-red-100 hover:bg-red-100'} transition-all`}
+                >
+                  <div className="bg-danger p-2 rounded-lg mb-2"><LifeBuoy className="w-4 h-4 text-black" /></div>
+                  <span className="text-[10px] font-black uppercase tracking-tighter">{t.civilDefense}</span>
+                  <span className="text-xs font-black">125</span>
+                </motion.a>
+              </div>
+              <motion.button 
+                whileTap={{ scale: 0.95 }}
+                onClick={() => {
+                  if ("geolocation" in navigator) {
+                    navigator.geolocation.getCurrentPosition((position) => {
+                      const { latitude, longitude } = position.coords;
+                      const mapsUrl = `https://www.google.com/maps?q=${latitude},${longitude}`;
+                      const message = encodeURIComponent(`${t.whatsappMessage}${mapsUrl}`);
+                      window.open(`https://wa.me/?text=${message}`, '_blank');
+                    }, (error) => {
+                      console.error("Error getting location:", error);
+                      alert("Please enable location services to share your GPS coordinates.");
+                    });
+                  } else {
+                    alert("Geolocation is not supported by your browser.");
+                  }
+                }}
+                className={`w-full flex items-center justify-center gap-2 p-3 rounded-2xl border ${theme === 'dark' ? 'bg-white/5 border-white/10 hover:bg-white/10' : 'bg-zinc-50 border-zinc-200 hover:bg-zinc-100'} transition-all`}
+              >
+                <MessageSquare className="w-4 h-4 text-safety" />
+                <span className="text-[10px] font-black uppercase tracking-widest">{t.shareLocation}</span>
+              </motion.button>
+            </div>
             <motion.button whileTap={{ scale: 0.95 }} onClick={() => setIsReportModalOpen(true)} className="w-full bg-danger text-black py-4 rounded-2xl font-black uppercase tracking-widest text-xs shadow-[0_0_20px_rgba(255,59,48,0.3)] flex items-center justify-center gap-2 mb-2">
               <AlertTriangle className="w-4 h-4" />{t.reportDanger}
             </motion.button>
@@ -611,6 +674,12 @@ const Sidebar = React.memo(({
             </div>
           </div>
           <div className={`mt-auto pt-6 border-t ${theme === 'dark' ? 'border-white/10' : 'border-zinc-100'}`}>
+            {isBackoffActive && (
+              <div className="mb-4 p-3 rounded-xl bg-warning/10 border border-warning/30 flex items-center gap-3">
+                <BatteryLow className="text-warning w-4 h-4" />
+                <p className="text-[8px] text-warning font-bold uppercase tracking-widest">Rate limit reached. Updates paused for 10m.</p>
+              </div>
+            )}
             <div className={`p-4 rounded-2xl flex items-center gap-4 ${theme === 'dark' ? 'bg-white/5' : 'bg-zinc-50'}`}>
               <div className="bg-safety/20 p-2 rounded-lg"><Zap className="text-safety w-4 h-4" /></div>
               <div><p className="text-[10px] font-black uppercase tracking-widest">{t.lowBandwidth}</p><p className="text-[8px] text-zinc-500">{t.optimized3G}</p></div>
@@ -629,9 +698,27 @@ export default function App() {
   const [language, setLanguage] = useState<Language>(() => (localStorage.getItem('guardian-lang') as Language) || 'en');
   
   const genAI = useMemo(() => process.env.GEMINI_API_KEY ? new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY }) : null, []);
+  const lastFetchRef = React.useRef<number>(0);
+  const [isBackoffActive, setIsBackoffActive] = useState(() => {
+    const backoffUntil = localStorage.getItem('guardian-backoff-until');
+    return backoffUntil ? Date.now() < parseInt(backoffUntil) : false;
+  });
 
-  const fetchCrisisData = useCallback(async () => {
+  const fetchCrisisData = useCallback(async (force = false) => {
     if (!genAI) return;
+    
+    const now = Date.now();
+    const backoffUntil = localStorage.getItem('guardian-backoff-until');
+    if (backoffUntil && now < parseInt(backoffUntil)) {
+      setIsBackoffActive(true);
+      return;
+    } else {
+      setIsBackoffActive(false);
+    }
+    
+    // Debounce: Don't fetch more than once every 2 minutes unless forced
+    if (!force && now - lastFetchRef.current < 120000) return;
+
     try {
       const response = await genAI.models.generateContent({
         model: "gemini-3-flash-preview",
@@ -667,16 +754,56 @@ export default function App() {
           isUserReported: false
         } as any);
       });
-    } catch (error) {
+      
+      lastFetchRef.current = now;
+      // Cache successful data
+      localStorage.setItem('guardian-crisis-cache', JSON.stringify(data));
+      localStorage.setItem('guardian-crisis-last-fetch', now.toString());
+    } catch (error: any) {
       console.error("Crisis data fetch failed:", error);
+      
+      // Handle Quota Exceeded (429)
+      if (error.message?.includes('429') || error.status === 'RESOURCE_EXHAUSTED' || error.message?.includes('quota')) {
+        const backoffTime = Date.now() + 600000; // 10 minutes
+        localStorage.setItem('guardian-backoff-until', backoffTime.toString());
+        setIsBackoffActive(true);
+      }
     }
   }, [addAlert, genAI]);
 
   useEffect(() => {
+    // Load from cache on mount
+    const cachedData = localStorage.getItem('guardian-crisis-cache');
+    const lastFetch = localStorage.getItem('guardian-crisis-last-fetch');
+    if (cachedData && lastFetch) {
+      const data = JSON.parse(cachedData);
+      const time = parseInt(lastFetch);
+      // Only use cache if it's less than 30 mins old
+      if (Date.now() - time < 1800000) {
+        data.forEach((report: any) => {
+          addAlert({
+            type: 'airstrike',
+            location: report.location,
+            districtId: report.districtId,
+            message: report.message,
+            coordinates: report.coordinates as [number, number],
+            timestamp: report.timestamp,
+            isUserReported: false
+          } as any);
+        });
+        lastFetchRef.current = time;
+      }
+    }
+
     fetchCrisisData();
-    const interval = setInterval(fetchCrisisData, 300000); // Every 5 mins
+    const interval = setInterval(() => {
+      const backoffUntil = localStorage.getItem('guardian-backoff-until');
+      if (!backoffUntil || Date.now() > parseInt(backoffUntil)) {
+        fetchCrisisData();
+      }
+    }, 300000); // Every 5 mins
     return () => clearInterval(interval);
-  }, [fetchCrisisData]);
+  }, [fetchCrisisData, addAlert]);
 
   const [theme, setTheme] = useState<Theme>(() => (localStorage.getItem('guardian-theme') as Theme) || 'dark');
   const [lowPowerMode, setLowPowerMode] = useState(() => localStorage.getItem('guardian-lowpower') === 'true');
@@ -789,6 +916,7 @@ export default function App() {
           setIsSidebarOpen={setIsSidebarOpen} setIsReportModalOpen={setIsReportModalOpen} 
           filteredAlerts={filteredAlerts} focusedAlertId={focusedAlertId} 
           setFocusedAlertId={setFocusedAlertId} getDistrictName={getDistrictName}
+          isBackoffActive={isBackoffActive}
         />
 
       <main className="flex-1 flex flex-col relative min-w-0 h-full">
@@ -853,7 +981,7 @@ export default function App() {
             theme={theme} alerts={alerts} services={services} activeFilter={activeFilter} routePath={routePath} 
             focusedAlertId={focusedAlertId} setFocusedAlertId={setFocusedAlertId} onBoundsChange={setMapBounds} 
             isReportingMode={isReportingMode} onMapClick={handleMapClick} lowPowerMode={lowPowerMode || activeFilter === 'airstrike'}
-            searchLocation={searchLocation} onZoom={fetchCrisisData}
+            searchLocation={searchLocation}
           />
           
           {isReportingMode && (
