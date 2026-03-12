@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, Fragment, useCallback } from 'react';
+import React, { useState, useEffect, useMemo, Fragment, useCallback, useRef } from 'react';
 import { 
   Phone,
   MessageSquare,
@@ -30,7 +30,11 @@ import {
   Info,
   ShieldCheck,
   HandHeart,
-  Flame
+  Flame,
+  Package,
+  Construction,
+  Fence,
+  Waves
 } from 'lucide-react';
 import { GoogleGenAI, Type } from "@google/genai";
 import { QRCodeCanvas } from 'qrcode.react';
@@ -94,6 +98,9 @@ const TRANSLATIONS: Record<Language, any> = {
     describe: "Describe the situation...",
     noResults: "No results found",
     verified: "Verified",
+    nnaVerified: "✓ Verified (NNA)",
+    communityReport: "⚠️ Community Report",
+    foodWater: "Food/Water Distribution",
     safeCorridor: "Safe Corridor",
     lowPower: "Low Power Mode",
     lowPowerDesc: "Disables map animations to save battery",
@@ -140,6 +147,22 @@ const TRANSLATIONS: Record<Language, any> = {
     limited: "Limited Service",
     closed: "Closed",
     lrcEmergency: "LRC Emergency: 140",
+    iAmSafe: "I am Safe",
+    iAmSafeMessage: "I am safe! My current location is: ",
+    roadStatus: "Road Status",
+    roadClosure: "Road Closure",
+    verifiedISF: "✓ Verified (ISF)",
+    communityAlert: "⚠️ Community Alert",
+    earthquakes: "Earthquakes",
+    seismicAlert: "SEISMIC ALERT",
+    seismicInstructions: "Drop, Cover, and Hold On",
+    magnitude: "Magnitude",
+    richter: "Richter",
+    workingOffline: "Working Offline",
+    survivalGuide: "Survival Guide",
+    earthquakeSafety: "Earthquake Safety",
+    gasLeakSafety: "Gas Leak Safety",
+    gasLeakInstructions: "If you smell gas: Open windows, do not use switches, leave immediately.",
     safetyDisclaimerTitle: "Safety Disclaimer",
     safetyDisclaimerMessage: "This app provides safety data for informational purposes only. Always prioritize local authorities' instructions. Stay safe.",
     districts: {
@@ -156,7 +179,6 @@ const TRANSLATIONS: Record<Language, any> = {
   ar: {
     name: "الحارس",
     safetyStatus: "حالة الأمان",
-    findSafestPath: "ابحث عن أمن طريق",
     reportDanger: "بلغ عن خطر",
     emergency: "طوارئ",
     searchPlaceholder: "ابحث عن قرية، مدينة أو عنوان...",
@@ -175,6 +197,9 @@ const TRANSLATIONS: Record<Language, any> = {
     describe: "صف الموقف...",
     noResults: "لم يتم العثور على نتائج",
     verified: "تم التحقق",
+    nnaVerified: "موثوق (NNA) ✓",
+    communityReport: "بلاغ مجتمعي ⚠️",
+    foodWater: "توزيع طعام/ماء",
     safeCorridor: "ممر آمن",
     lowPower: "وضع توفير الطاقة",
     lowPowerDesc: "يعطل الرسوم المتحركة لتوفير البطارية",
@@ -221,6 +246,23 @@ const TRANSLATIONS: Record<Language, any> = {
     limited: "خدمة محدودة",
     closed: "مغلق",
     lrcEmergency: "طوارئ الصليب الأحمر: ١٤٠",
+    iAmSafe: "أنا بخير",
+    iAmSafeMessage: "أنا بخير! موقعي الحالي هو: ",
+    findSafestPath: "البحث عن المسار الأكثر أماناً",
+    roadStatus: "حالة الطرق",
+    roadClosure: "إغلاق طريق",
+    verifiedISF: "موثوق (ISF) ✓",
+    communityAlert: "بلاغ مجتمعي ⚠️",
+    earthquakes: "هزات أرضية",
+    seismicAlert: "تنبيه زلزالي",
+    seismicInstructions: "انخفض، تغطَّ، وتمسك",
+    magnitude: "القوة",
+    richter: "ريختر",
+    workingOffline: "نظام عدم الاتصال",
+    survivalGuide: "دليل النجاة",
+    earthquakeSafety: "السلامة من الزلازل",
+    gasLeakSafety: "السلامة من تسرب الغاز",
+    gasLeakInstructions: "إذا شممت رائحة غاز: افتح النوافذ، لا تستخدم المفاتيح الكهربائية، وغادر فوراً.",
     safetyDisclaimerTitle: "إخلاء مسؤولية الأمان",
     safetyDisclaimerMessage: "يوفر هذا التطبيق بيانات الأمان لأغراض إعلامية فقط. أعطِ الأولوية دائماً لتعليمات السلطات المحلية. ابقَ آمناً.",
     districts: {
@@ -256,6 +298,9 @@ const TRANSLATIONS: Record<Language, any> = {
     describe: "Décrivez la situation...",
     noResults: "Aucun résultat",
     verified: "Vérifié",
+    nnaVerified: "✓ Vérifié (NNA)",
+    communityReport: "⚠️ Signalement Communautaire",
+    foodWater: "Distribution Eau/Nourriture",
     safeCorridor: "Corridor Sûr",
     lowPower: "Mode Économie",
     lowPowerDesc: "Désactive les animations pour économiser la batterie",
@@ -302,6 +347,22 @@ const TRANSLATIONS: Record<Language, any> = {
     limited: "Service Limité",
     closed: "Fermé",
     lrcEmergency: "Urgence Croix-Rouge: 140",
+    iAmSafe: "Je suis en sécurité",
+    iAmSafeMessage: "Je suis en sécurité ! Ma position actuelle est : ",
+    roadStatus: "État des Routes",
+    roadClosure: "Route Fermée",
+    verifiedISF: "✓ Vérifié (ISF)",
+    communityAlert: "⚠️ Alerte Communautaire",
+    earthquakes: "Séismes",
+    seismicAlert: "ALERTE SISMIQUE",
+    seismicInstructions: "Baissez-vous, abritez-vous et agrippez-vous",
+    magnitude: "Magnitude",
+    richter: "Richter",
+    workingOffline: "Mode Hors-ligne",
+    survivalGuide: "Guide de Survie",
+    earthquakeSafety: "Sécurité Séisme",
+    gasLeakSafety: "Sécurité Fuite de Gaz",
+    gasLeakInstructions: "Si vous sentez du gaz : ouvrez les fenêtres, n'utilisez pas d'interrupteurs, partez immédiatement.",
     safetyDisclaimerTitle: "Avis de sécurité",
     safetyDisclaimerMessage: "Cette application fournit des données de sécurité à titre informatif uniquement. Priorisez toujours les instructions des autorités locales. Restez en sécurité.",
     districts: {
@@ -367,7 +428,12 @@ const MapBoundsHandler = ({ onBoundsChange }: { onBoundsChange: (bounds: L.LatLn
     moveend: () => onBoundsChange(map.getBounds()),
     zoomend: () => onBoundsChange(map.getBounds()),
   });
-  useEffect(() => { onBoundsChange(map.getBounds()); }, [map, onBoundsChange]);
+  
+  // Initial bounds set
+  useEffect(() => {
+    onBoundsChange(map.getBounds());
+  }, []); // Only run once on mount
+
   return null;
 };
 
@@ -380,30 +446,45 @@ const MapClickHandler = ({ isReportingMode, onMapClick }: { isReportingMode: boo
 
 const MapUpdater = ({ focusedAlertId, alerts, searchLocation }: { focusedAlertId: string | null, alerts: Alert[], searchLocation: [number, number] | null }) => {
   const map = useMap();
+  const lastFocusedId = useRef<string | null>(null);
+  const lastSearchLoc = useRef<string | null>(null);
+
   useEffect(() => {
     if (!map) return;
-    if (focusedAlertId) {
+    
+    if (focusedAlertId && focusedAlertId !== lastFocusedId.current) {
       const alert = alerts.find(a => a.id === focusedAlertId);
-      if (alert) map.setView(alert.coordinates, 14);
+      if (alert) {
+        map.setView(alert.coordinates, 14);
+        lastFocusedId.current = focusedAlertId;
+      }
     } else if (searchLocation) {
-      map.setView(searchLocation, 12);
+      const locKey = `${searchLocation[0]},${searchLocation[1]}`;
+      if (locKey !== lastSearchLoc.current) {
+        map.setView(searchLocation, 12);
+        lastSearchLoc.current = locKey;
+      }
     }
+    
+    if (!focusedAlertId) lastFocusedId.current = null;
+    if (!searchLocation) lastSearchLoc.current = null;
   }, [map, focusedAlertId, alerts, searchLocation]);
+
   return null;
 };
 
-const PulseCircle = ({ center, pulse, lowPowerMode, color = '#FF3B30' }: { center: [number, number], pulse: number, lowPowerMode: boolean, color?: string }) => {
+const PulseCircle = ({ center, pulse, lowPowerMode, color = '#FF3B30', radius = 500 }: { center: [number, number], pulse: number, lowPowerMode: boolean, color?: string, radius?: number }) => {
   if (lowPowerMode) return (
     <Circle 
       center={center} 
-      radius={500} 
+      radius={radius} 
       pathOptions={{ fillColor: color, fillOpacity: 0.3, strokeWeight: 1, color: color }} 
     />
   );
   return (
     <Circle
       center={center}
-      radius={500 * pulse}
+      radius={radius * pulse}
       pathOptions={{
         fillColor: color,
         fillOpacity: 0.4 * (1.5 - pulse),
@@ -451,7 +532,7 @@ const ZoomControls = ({ isRTL }: { isRTL: boolean }) => {
 };
 
 const MapComponent = React.memo(({ 
-  theme, alerts, services, activeFilter, routePath, focusedAlertId, setFocusedAlertId, onBoundsChange, isReportingMode, onMapClick, lowPowerMode, searchLocation, onZoom
+  theme, alerts, services, earthquakes, activeFilter, routePath, focusedAlertId, setFocusedAlertId, onBoundsChange, isReportingMode, onMapClick, lowPowerMode, searchLocation, onZoom
 }: any) => {
   const { t, language, isRTL } = useLanguage();
   const [pulse, setPulse] = useState(1);
@@ -495,25 +576,35 @@ const MapComponent = React.memo(({
         
         <ZoomControls isRTL={isRTL} />
 
-        {alerts.filter(a => activeFilter === 'airstrike' ? a.type === 'airstrike' : true).map(alert => (
+        {alerts.filter(a => {
+          if (!activeFilter || activeFilter === 'all') return true;
+          if (activeFilter === 'airstrike') return a.type === 'airstrike';
+          if (activeFilter === 'road_closure') return a.type === 'road_closure';
+          return false;
+        }).map(alert => (
           <Fragment key={alert.id}>
             {(alert.type === 'danger' || alert.type === 'airstrike') && (
               <PulseCircle center={alert.coordinates} pulse={pulse} lowPowerMode={lowPowerMode} color={alert.type === 'airstrike' ? '#FF3B30' : '#FF3B30'} />
             )}
             <Marker
               position={alert.coordinates}
-              icon={alert.type === 'airstrike' ? createCustomIcon('🔥', '#FF3B30') : alert.type === 'danger' ? dangerIcon : alert.type === 'warning' ? warningIcon : infoIcon}
+              icon={
+                alert.type === 'airstrike' ? createCustomIcon('🔥', '#FF3B30') : 
+                alert.type === 'road_closure' ? createCustomIcon('✖', '#FF9500') :
+                alert.type === 'danger' ? dangerIcon : 
+                alert.type === 'warning' ? warningIcon : infoIcon
+              }
               eventHandlers={{ click: () => setFocusedAlertId(alert.id) }}
             >
               <Popup>
                 <div className="p-2 min-w-[200px]" dir={isRTL ? 'rtl' : 'ltr'}>
-                  <p className={`text-[10px] font-black uppercase tracking-widest mb-1 ${alert.type === 'airstrike' || alert.type === 'danger' ? 'text-danger' : 'text-warning'}`}>
-                    {alert.type === 'airstrike' ? t.airstrikes : t.dangerZone}
+                  <p className={`text-[10px] font-black uppercase tracking-widest mb-1 ${alert.type === 'airstrike' || alert.type === 'danger' || alert.type === 'road_closure' ? 'text-danger' : 'text-warning'}`}>
+                    {alert.type === 'airstrike' ? t.airstrikes : alert.type === 'road_closure' ? t.roadClosure : t.dangerZone}
                   </p>
                   <p className="font-bold text-sm mb-2">{alert.message}</p>
                   <div className="flex items-center justify-between border-t pt-2">
-                    <span className="text-[10px] font-bold text-zinc-500 uppercase">
-                      {alert.isUserReported ? t.userVerified : t.verified}
+                    <span className={`text-[9px] font-bold uppercase px-1.5 py-0.5 rounded border ${alert.isUserReported ? 'border-warning/50 text-warning bg-warning/5' : 'border-safety/50 text-safety bg-safety/5'}`}>
+                      {alert.type === 'road_closure' && !alert.isUserReported ? t.verifiedISF : alert.isUserReported ? t.communityAlert : t.nnaVerified}
                     </span>
                     <span className="text-[10px] font-mono font-bold">
                       {alert.type === 'airstrike' ? t.reported_ago.replace('{time}', alert.timestamp) : t.verified_ago.replace('{time}', alert.timestamp)}
@@ -525,8 +616,43 @@ const MapComponent = React.memo(({
           </Fragment>
         ))}
 
+        {earthquakes.filter(() => !activeFilter || activeFilter === 'all' || activeFilter === 'earthquake').map((quake: any) => (
+          <Fragment key={quake.id}>
+            <PulseCircle 
+              center={quake.coordinates} 
+              pulse={pulse} 
+              lowPowerMode={lowPowerMode} 
+              color="#A855F7" 
+              radius={1500}
+            />
+            <Marker
+              position={quake.coordinates}
+              icon={createCustomIcon('🌋', quake.mag > 6.0 ? '#FF3B30' : quake.mag > 4.0 ? '#FF9500' : '#FFCC00')}
+            >
+              <Popup>
+                <div className="p-2 min-w-[200px]" dir={isRTL ? 'rtl' : 'ltr'}>
+                  <p className="text-[10px] font-black uppercase tracking-widest mb-1 text-purple-500">
+                    {t.earthquakes}
+                  </p>
+                  <p className="font-bold text-sm mb-1">{quake.place}</p>
+                  <div className={`flex items-center gap-2 mb-2 p-1.5 rounded-lg ${theme === 'dark' ? 'bg-zinc-800' : 'bg-zinc-100'}`}>
+                    <div className={`w-2 h-2 rounded-full ${quake.mag > 6.0 ? 'bg-danger animate-pulse' : quake.mag > 4.0 ? 'bg-warning' : 'bg-yellow-400'}`} />
+                    <p className="text-[10px] font-black uppercase">
+                      {t.magnitude}: {quake.mag} {t.richter}
+                    </p>
+                  </div>
+                  <p className="text-[10px] font-mono font-bold text-zinc-500">{quake.time}</p>
+                </div>
+              </Popup>
+            </Marker>
+          </Fragment>
+        ))}
+
         <MarkerClusterGroup chunkedLoading>
-          {activeFilter && services.filter(s => s.type === activeFilter || activeFilter === 'all').map(service => (
+          {services.filter(s => {
+            if (activeFilter === 'all') return true;
+            return s.type === activeFilter;
+          }).map(service => (
             <Marker
               key={service.id}
               position={service.coordinates}
@@ -535,9 +661,11 @@ const MapComponent = React.memo(({
                 service.type === 'bakery' ? '🍞' :
                 service.type === 'pharmacy' ? '💊' :
                 service.type === 'fuel' ? '⛽' : 
+                service.type === 'food_water' ? '📦' :
                 service.type === 'ngo' ? '❤️' : '🛠️',
                 service.type === 'hospital' ? '#007AFF' : 
-                service.type === 'ngo' ? '#FF2D55' : '#FFCC00'
+                service.type === 'ngo' ? '#FF2D55' : 
+                service.type === 'food_water' ? '#34C759' : '#FFCC00'
               )}
             >
             <Popup>
@@ -573,7 +701,7 @@ const MapComponent = React.memo(({
         </MarkerClusterGroup>
 
         {routePath.length > 1 && (
-          <Polyline positions={routePath} pathOptions={{ color: '#34C759', weight: 6, opacity: 0.8 }} />
+          <Polyline positions={routePath} pathOptions={{ color: '#007AFF', weight: 6, opacity: 0.8, dashArray: '10, 10' }} />
         )}
       </MapContainer>
     </div>
@@ -600,12 +728,13 @@ const Sidebar = React.memo(({
             <div className="flex items-center justify-between mb-8">
               <div className="flex items-center gap-3">
                 <div className="bg-danger p-2 rounded-xl shadow-[0_0_15px_rgba(255,59,48,0.4)]"><ShieldAlert className="text-black w-6 h-6" /></div>
-                <h1 className="text-2xl font-black tracking-tighter uppercase italic text-left" style={{ textAlign: 'left' }}>GUARDIAN</h1>
+                <h1 className="text-2xl font-black tracking-tighter uppercase italic text-left" style={{ textAlign: 'left', direction: 'ltr' }}>GUARDIAN</h1>
               </div>
               <motion.button whileTap={{ scale: 0.9 }} onClick={() => setIsSidebarOpen(false)} className={`p-2 rounded-xl ${theme === 'dark' ? 'hover:bg-white/5' : 'hover:bg-zinc-100'}`}><X className="w-5 h-5" /></motion.button>
             </div>
-            <div className="flex-1 overflow-y-auto no-scrollbar space-y-6">
-            <div className="space-y-3">
+
+            {/* Pinned SOS Section */}
+            <div className="mb-6 space-y-3">
               <h3 className="text-[10px] font-black uppercase tracking-widest text-danger px-2">{t.emergencyContacts}</h3>
               <div className="grid grid-cols-2 gap-2">
                 <motion.a 
@@ -627,29 +756,55 @@ const Sidebar = React.memo(({
                   <span className="text-xs font-black">125</span>
                 </motion.a>
               </div>
-              <motion.button 
-                whileTap={{ scale: 0.95 }}
-                onClick={() => {
-                  if ("geolocation" in navigator) {
-                    navigator.geolocation.getCurrentPosition((position) => {
-                      const { latitude, longitude } = position.coords;
-                      const mapsUrl = `https://www.google.com/maps?q=${latitude},${longitude}`;
-                      const message = encodeURIComponent(`${t.whatsappMessage}${mapsUrl}`);
-                      window.open(`https://wa.me/?text=${message}`, '_blank');
-                    }, (error) => {
-                      console.error("Error getting location:", error);
-                      alert("Please enable location services to share your GPS coordinates.");
-                    });
-                  } else {
-                    alert("Geolocation is not supported by your browser.");
-                  }
-                }}
-                className={`w-full flex items-center justify-center gap-2 p-3 rounded-2xl border ${theme === 'dark' ? 'bg-white/5 border-white/10 hover:bg-white/10' : 'bg-zinc-50 border-zinc-200 hover:bg-zinc-100'} transition-all`}
-              >
-                <MessageSquare className="w-4 h-4 text-safety" />
-                <span className="text-[10px] font-black uppercase tracking-widest">{t.shareLocation}</span>
-              </motion.button>
+              <div className="grid grid-cols-2 gap-2">
+                <motion.button 
+                  whileTap={{ scale: 0.95 }}
+                  onClick={() => {
+                    if ("geolocation" in navigator) {
+                      navigator.geolocation.getCurrentPosition((position) => {
+                        const { latitude, longitude } = position.coords;
+                        const mapsUrl = `https://www.google.com/maps?q=${latitude},${longitude}`;
+                        const message = encodeURIComponent(`${t.whatsappMessage}${mapsUrl}`);
+                        window.open(`https://wa.me/?text=${message}`, '_blank');
+                      }, (error) => {
+                        console.error("Error getting location:", error);
+                        alert("Please enable location services to share your GPS coordinates.");
+                      });
+                    } else {
+                      alert("Geolocation is not supported by your browser.");
+                    }
+                  }}
+                  className={`flex flex-col items-center justify-center p-3 rounded-2xl border ${theme === 'dark' ? 'bg-white/5 border-white/10 hover:bg-white/10' : 'bg-zinc-50 border-zinc-200 hover:bg-zinc-100'} transition-all`}
+                >
+                  <MessageSquare className="w-4 h-4 text-safety mb-1" />
+                  <span className="text-[8px] font-black uppercase tracking-widest text-center">{t.shareLocation}</span>
+                </motion.button>
+                <motion.button 
+                  whileTap={{ scale: 0.95 }}
+                  onClick={() => {
+                    if ("geolocation" in navigator) {
+                      navigator.geolocation.getCurrentPosition((position) => {
+                        const { latitude, longitude } = position.coords;
+                        const mapsUrl = `https://www.google.com/maps?q=${latitude},${longitude}`;
+                        const message = encodeURIComponent(`${t.iAmSafeMessage}${mapsUrl}`);
+                        window.open(`https://wa.me/?text=${message}`, '_blank');
+                      }, (error) => {
+                        console.error("Error getting location:", error);
+                        alert("Please enable location services to share your GPS coordinates.");
+                      });
+                    } else {
+                      alert("Geolocation is not supported by your browser.");
+                    }
+                  }}
+                  className={`flex flex-col items-center justify-center p-3 rounded-2xl border ${theme === 'dark' ? 'bg-safety/10 border-safety/30 hover:bg-safety/20' : 'bg-green-50 border-green-100 hover:bg-green-100'} transition-all`}
+                >
+                  <ShieldCheck className="w-4 h-4 text-safety mb-1" />
+                  <span className="text-[8px] font-black uppercase tracking-widest text-center">{t.iAmSafe}</span>
+                </motion.button>
+              </div>
             </div>
+
+            <div className="flex-1 overflow-y-auto no-scrollbar space-y-6">
             <motion.button whileTap={{ scale: 0.95 }} onClick={() => setIsReportModalOpen(true)} className="w-full bg-danger text-black py-4 rounded-2xl font-black uppercase tracking-widest text-xs shadow-[0_0_20px_rgba(255,59,48,0.3)] flex items-center justify-center gap-2 mb-2">
               <AlertTriangle className="w-4 h-4" />{t.reportDanger}
             </motion.button>
@@ -663,7 +818,12 @@ const Sidebar = React.memo(({
                     className={`p-4 rounded-2xl border cursor-pointer transition-all ${focusedAlertId === alert.id ? 'bg-danger/10 border-danger' : theme === 'dark' ? 'bg-white/5 border-white/5 hover:border-white/20' : 'bg-zinc-50 border-zinc-100 hover:border-zinc-300'}`}
                   >
                     <div className="flex justify-between items-start mb-2">
-                      <span className={`text-[8px] font-black uppercase tracking-tighter px-2 py-0.5 rounded ${alert.type === 'danger' ? 'bg-danger text-black' : alert.type === 'warning' ? 'bg-warning text-black' : 'bg-safety text-black'}`}>{alert.type}</span>
+                      <div className="flex flex-col gap-1">
+                        <span className={`text-[8px] font-black uppercase tracking-tighter px-2 py-0.5 rounded w-fit ${alert.type === 'danger' || alert.type === 'airstrike' ? 'bg-danger text-black' : alert.type === 'road_closure' ? 'bg-warning text-black' : 'bg-safety text-black'}`}>{alert.type === 'road_closure' ? t.roadClosure : alert.type}</span>
+                        <span className={`text-[7px] font-bold uppercase tracking-widest px-1.5 py-0.5 rounded border ${alert.isUserReported ? 'border-warning/50 text-warning bg-warning/5' : 'border-safety/50 text-safety bg-safety/5'}`}>
+                          {alert.type === 'road_closure' && !alert.isUserReported ? t.verifiedISF : alert.isUserReported ? t.communityAlert : t.nnaVerified}
+                        </span>
+                      </div>
                       <span className="text-[8px] font-mono text-zinc-500">{alert.timestamp}</span>
                     </div>
                     <div className="flex items-center gap-1 mb-1"><MapPin className="w-3 h-3 text-zinc-500" /><p className={`text-xs font-bold ${theme === 'dark' ? 'text-white' : 'text-zinc-900'}`}>{alert.location} ({getDistrictName(alert.districtId)})</p></div>
@@ -672,6 +832,27 @@ const Sidebar = React.memo(({
                 ))}
               </div>
             </div>
+
+            <div className="space-y-3 mt-6">
+              <h3 className="text-[10px] font-black uppercase tracking-widest text-zinc-500 px-2">{t.survivalGuide}</h3>
+              <div className="space-y-2">
+                <div className={`p-4 rounded-2xl border ${theme === 'dark' ? 'bg-white/5 border-white/5' : 'bg-zinc-50 border-zinc-100'}`}>
+                  <div className="flex items-center gap-2 mb-2">
+                    <Waves className="w-4 h-4 text-purple-500" />
+                    <p className="text-[10px] font-black uppercase tracking-widest">{t.earthquakeSafety}</p>
+                  </div>
+                  <p className="text-[10px] text-zinc-500 leading-relaxed">{t.seismicInstructions}</p>
+                </div>
+                <div className={`p-4 rounded-2xl border ${theme === 'dark' ? 'bg-white/5 border-white/5' : 'bg-zinc-50 border-zinc-100'}`}>
+                  <div className="flex items-center gap-2 mb-2">
+                    <Flame className="w-4 h-4 text-warning" />
+                    <p className="text-[10px] font-black uppercase tracking-widest">{t.gasLeakSafety}</p>
+                  </div>
+                  <p className="text-[10px] text-zinc-500 leading-relaxed">{t.gasLeakInstructions}</p>
+                </div>
+              </div>
+            </div>
+
           </div>
           <div className={`mt-auto pt-6 border-t ${theme === 'dark' ? 'border-white/10' : 'border-zinc-100'}`}>
             {isBackoffActive && (
@@ -722,7 +903,7 @@ export default function App() {
     try {
       const response = await genAI.models.generateContent({
         model: "gemini-3-flash-preview",
-        contents: "Simulate a Telegram/RSS feed scanner for Lebanon. Summarize 2-3 realistic recent airstrike reports from verified sources in South Lebanon, Bekaa, and Beirut Dahiya. Return JSON array of objects with location, districtId (beirut, dahieh, tyre, nabatieh, baalbek), message, coordinates [lat, lng], timestamp (e.g. '5m').",
+        contents: "Simulate a Live Data Analyst for Lebanon in 2026. Generate 5-10 realistic, timestamped reports of recent airstrikes, road closures, safe humanitarian shelters, and aid distribution points. Return JSON array of objects with type ('airstrike', 'road_closure', 'danger', 'info'), location, districtId (beirut, dahieh, tyre, nabatieh, baalbek), message, coordinates [lat, lng], timestamp (e.g. '2m'). Ensure locations are realistic for South Lebanon, Bekaa, and Beirut.",
         config: {
           responseMimeType: "application/json",
           responseSchema: {
@@ -730,13 +911,14 @@ export default function App() {
             items: {
               type: Type.OBJECT,
               properties: {
+                type: { type: Type.STRING },
                 location: { type: Type.STRING },
                 districtId: { type: Type.STRING },
                 message: { type: Type.STRING },
                 coordinates: { type: Type.ARRAY, items: { type: Type.NUMBER } },
                 timestamp: { type: Type.STRING }
               },
-              required: ["location", "districtId", "message", "coordinates", "timestamp"]
+              required: ["type", "location", "districtId", "message", "coordinates", "timestamp"]
             }
           }
         }
@@ -745,7 +927,7 @@ export default function App() {
       const data = JSON.parse(response.text);
       data.forEach((report: any) => {
         addAlert({
-          type: 'airstrike',
+          type: report.type || 'airstrike',
           location: report.location,
           districtId: report.districtId,
           message: report.message,
@@ -775,28 +957,28 @@ export default function App() {
     // Load from cache on mount
     const cachedData = localStorage.getItem('guardian-crisis-cache');
     const lastFetch = localStorage.getItem('guardian-crisis-last-fetch');
-    if (cachedData && lastFetch) {
+    if (cachedData) {
       const data = JSON.parse(cachedData);
-      const time = parseInt(lastFetch);
-      // Only use cache if it's less than 30 mins old
-      if (Date.now() - time < 1800000) {
-        data.forEach((report: any) => {
-          addAlert({
-            type: 'airstrike',
-            location: report.location,
-            districtId: report.districtId,
-            message: report.message,
-            coordinates: report.coordinates as [number, number],
-            timestamp: report.timestamp,
-            isUserReported: false
-          } as any);
-        });
-        lastFetchRef.current = time;
-      }
+      data.forEach((report: any) => {
+        addAlert({
+          type: report.type || 'airstrike',
+          location: report.location,
+          districtId: report.districtId,
+          message: report.message,
+          coordinates: report.coordinates as [number, number],
+          timestamp: report.timestamp,
+          isUserReported: false
+        } as any);
+      });
+      if (lastFetch) lastFetchRef.current = parseInt(lastFetch);
     }
 
-    fetchCrisisData();
+    if (navigator.onLine) {
+      fetchCrisisData();
+    }
+    
     const interval = setInterval(() => {
+      if (!navigator.onLine) return;
       const backoffUntil = localStorage.getItem('guardian-backoff-until');
       if (!backoffUntil || Date.now() > parseInt(backoffUntil)) {
         fetchCrisisData();
@@ -804,6 +986,70 @@ export default function App() {
     }, 300000); // Every 5 mins
     return () => clearInterval(interval);
   }, [fetchCrisisData, addAlert]);
+
+  const [isOnline, setIsOnline] = useState(navigator.onLine);
+
+  useEffect(() => {
+    const handleOnline = () => setIsOnline(true);
+    const handleOffline = () => setIsOnline(false);
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, []);
+
+  const [earthquakes, setEarthquakes] = useState<any[]>([]);
+  const [seismicAlert, setSeismicAlert] = useState<any | null>(null);
+
+  const fetchEarthquakes = useCallback(async () => {
+    try {
+      const response = await fetch('https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/all_day.geojson');
+      const data = await response.json();
+      
+      const beirut = { lat: 33.89, lng: 35.50 };
+      
+      const filtered = data.features.filter((f: any) => {
+        const [lng, lat] = f.geometry.coordinates;
+        const mag = f.properties.mag;
+        
+        // Simple distance approximation for 500km
+        const dist = Math.sqrt(Math.pow(lat - beirut.lat, 2) + Math.pow(lng - beirut.lng, 2)) * 111;
+        
+        return mag > 2.0 && dist < 500;
+      }).map((f: any) => ({
+        id: f.id,
+        mag: f.properties.mag,
+        place: f.properties.place,
+        time: new Date(f.properties.time).toLocaleTimeString(),
+        coordinates: [f.geometry.coordinates[1], f.geometry.coordinates[0]] as [number, number]
+      }));
+
+      setEarthquakes(filtered);
+      localStorage.setItem('guardian-earthquake-cache', JSON.stringify(filtered));
+
+      // Check for large quakes (> 4.5)
+      const largeQuake = filtered.find((q: any) => q.mag > 4.5);
+      if (largeQuake) {
+        setSeismicAlert(largeQuake);
+      } else {
+        setSeismicAlert(null);
+      }
+    } catch (error) {
+      console.error("Failed to fetch earthquake data:", error);
+      const cached = localStorage.getItem('guardian-earthquake-cache');
+      if (cached) {
+        setEarthquakes(JSON.parse(cached));
+      }
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchEarthquakes();
+    const interval = setInterval(fetchEarthquakes, 300000); // 5 mins
+    return () => clearInterval(interval);
+  }, [fetchEarthquakes]);
 
   const [theme, setTheme] = useState<Theme>(() => (localStorage.getItem('guardian-theme') as Theme) || 'dark');
   const [lowPowerMode, setLowPowerMode] = useState(() => localStorage.getItem('guardian-lowpower') === 'true');
@@ -848,10 +1094,10 @@ export default function App() {
     }
   }, []);
 
-  const dismissWelcome = () => {
+  const dismissWelcome = useCallback(() => {
     localStorage.setItem('guardian-welcome-seen', 'true');
     setShowWelcome(false);
-  };
+  }, []);
 
   useEffect(() => {
     localStorage.setItem('guardian-lang', language);
@@ -876,37 +1122,56 @@ export default function App() {
     ).slice(0, 5);
   }, [searchQuery, locations]);
 
-  const getDistrictName = (id: string) => {
+  const getDistrictName = useCallback((id: string) => {
     const district = districts.find(d => d.id === id);
     return district ? district.name[language] : id;
-  };
+  }, [language]);
 
-  const calculateSafestRoute = () => {
+  const calculateSafestRoute = useCallback(() => {
     setIsRouting(true);
     setTimeout(() => {
       const start = districts.find(d => d.id === startDistrict);
       const end = districts.find(d => d.id === endDistrict);
       if (start && end) {
-        // Simple straight line for demo, in real app would use routing engine
-        setRoutePath([start.bounds[0], end.bounds[0]]);
+        const startCoord = start.bounds[0];
+        const endCoord = end.bounds[0];
+        
+        // Smart "Safe Path" logic: Avoid airstrike markers
+        const airstrikes = alerts.filter(a => a.type === 'airstrike' || a.type === 'road_closure');
+        let midPoint: [number, number] = [(startCoord[0] + endCoord[0]) / 2, (startCoord[1] + endCoord[1]) / 2];
+        
+        // If midpoint is near an airstrike or road closure, nudge it significantly
+        airstrikes.forEach(strike => {
+          const dist = Math.sqrt(Math.pow(strike.coordinates[0] - midPoint[0], 2) + Math.pow(strike.coordinates[1] - midPoint[1], 2));
+          if (dist < 0.1) { 
+            // Nudge away from the danger
+            const dx = midPoint[0] - strike.coordinates[0];
+            const dy = midPoint[1] - strike.coordinates[1];
+            const angle = Math.atan2(dy, dx);
+            midPoint[0] += Math.cos(angle) * 0.15;
+            midPoint[1] += Math.sin(angle) * 0.15;
+          }
+        });
+
+        setRoutePath([startCoord, midPoint, endCoord]);
       }
       setIsRouting(false);
     }, 1500);
-  };
+  }, [startDistrict, endDistrict, alerts]);
 
-  const handleMapClick = (lat: number, lng: number) => {
+  const handleMapClick = useCallback((lat: number, lng: number) => {
     if (isReportingMode) {
       setIsReportModalOpen(true);
       setIsReportingMode(false);
     }
-  };
+  }, [isReportingMode]);
 
-  const handleShare = () => {
+  const handleShare = useCallback(() => {
     const url = window.location.href;
     navigator.clipboard.writeText(url);
     setShareToast(true);
     setTimeout(() => setShareToast(false), 3000);
-  };
+  }, []);
 
   return (
     <LanguageContext.Provider value={{ language, setLanguage, t, isRTL }}>
@@ -921,6 +1186,27 @@ export default function App() {
 
       <main className="flex-1 flex flex-col relative min-w-0 h-full">
         <header className={`sticky top-0 z-[1100] border-b backdrop-blur-xl ${theme === 'dark' ? 'bg-black/80 border-white/10' : 'bg-white/90 border-zinc-200'}`}>
+          {!isOnline && (
+            <div className="bg-zinc-800 text-white p-2 flex items-center justify-center gap-2 border-b border-white/5">
+              <WifiOff className="w-3 h-3 text-zinc-400" />
+              <span className="text-[10px] font-black uppercase tracking-widest">{t.workingOffline}</span>
+            </div>
+          )}
+          {seismicAlert && (
+            <motion.div 
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: 'auto', opacity: 1 }}
+              className="bg-danger text-black p-3 flex flex-col items-center justify-center gap-1 border-b border-black/20"
+            >
+              <div className="flex items-center gap-2">
+                <Waves className="w-5 h-5 animate-bounce" />
+                <span className="text-xs font-black uppercase tracking-[0.2em]">{t.seismicAlert}</span>
+                <Waves className="w-5 h-5 animate-bounce" />
+              </div>
+              <p className="text-[10px] font-bold uppercase tracking-widest opacity-80">{t.seismicInstructions}</p>
+              <p className="text-[9px] font-black mt-1">M{seismicAlert.mag} - {seismicAlert.place}</p>
+            </motion.div>
+          )}
           <div className="max-w-4xl mx-auto p-4 space-y-4">
             <div className={`flex items-center justify-between ${isRTL ? 'flex-row-reverse' : ''}`}>
               <motion.button whileTap={{ scale: 0.9 }} onClick={() => setIsSidebarOpen(true)} className={`p-2.5 rounded-xl border ${theme === 'dark' ? 'bg-white/5 border-white/10' : 'bg-zinc-100 border-zinc-200'}`}><Menu className="w-5 h-5" /></motion.button>
@@ -960,7 +1246,25 @@ export default function App() {
               >
                 <Flame className="w-3 h-3" />{t.airstrikes}
               </button>
+              <button 
+                onClick={() => setActiveFilter(activeFilter === 'road_closure' ? null : 'road_closure')} 
+                className={`flex items-center gap-2 px-4 py-2 rounded-full border text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap ${activeFilter === 'road_closure' ? 'bg-warning text-black border-warning shadow-[0_0_15px_rgba(255,149,0,0.4)]' : 'bg-white/5 border-white/10 text-zinc-400 hover:border-white/30'}`}
+              >
+                <Construction className="w-3 h-3" />{t.roadStatus}
+              </button>
+              <button 
+                onClick={() => setActiveFilter(activeFilter === 'earthquake' ? null : 'earthquake')} 
+                className={`flex items-center gap-2 px-4 py-2 rounded-full border text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap ${activeFilter === 'earthquake' ? 'bg-purple-500 text-black border-purple-500 shadow-[0_0_15px_rgba(168,85,247,0.4)]' : 'bg-white/5 border-white/10 text-zinc-400 hover:border-white/30'}`}
+              >
+                <Waves className="w-3 h-3" />{t.earthquakes}
+              </button>
               <button onClick={() => setActiveFilter(activeFilter === 'all' ? null : 'all')} className={`flex items-center gap-2 px-4 py-2 rounded-full border text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap ${activeFilter === 'all' ? 'bg-white text-black border-white' : 'bg-white/5 border-white/10 text-zinc-400 hover:border-white/30'}`}><Shield className="w-3 h-3" />{t.allResources}</button>
+              <button 
+                onClick={() => setActiveFilter(activeFilter === 'food_water' ? null : 'food_water')} 
+                className={`flex items-center gap-2 px-4 py-2 rounded-full border text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap ${activeFilter === 'food_water' ? 'bg-safety text-black border-safety shadow-[0_0_15px_rgba(52,199,89,0.4)]' : 'bg-white/5 border-white/10 text-zinc-400 hover:border-white/30'}`}
+              >
+                <Package className="w-3 h-3" />{t.foodWater}
+              </button>
               {['hospital', 'bakery', 'pharmacy', 'fuel', 'tools', 'ngo'].map(type => (
                 <button key={type} onClick={() => setActiveFilter(activeFilter === type ? null : type)} className={`flex items-center gap-2 px-4 py-2 rounded-full border text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap ${activeFilter === type ? 'bg-white text-black border-white' : 'bg-white/5 border-white/10 text-zinc-400 hover:border-white/30'}`}>
                   {type === 'hospital' ? <Hospital className="w-3 h-3" /> : 
@@ -978,9 +1282,9 @@ export default function App() {
 
         <div className="flex-1 relative">
           <MapComponent 
-            theme={theme} alerts={alerts} services={services} activeFilter={activeFilter} routePath={routePath} 
+            theme={!isOnline ? 'dark' : theme} alerts={alerts} services={services} earthquakes={earthquakes} activeFilter={activeFilter} routePath={routePath} 
             focusedAlertId={focusedAlertId} setFocusedAlertId={setFocusedAlertId} onBoundsChange={setMapBounds} 
-            isReportingMode={isReportingMode} onMapClick={handleMapClick} lowPowerMode={lowPowerMode || activeFilter === 'airstrike'}
+            isReportingMode={isReportingMode} onMapClick={handleMapClick} lowPowerMode={lowPowerMode || activeFilter === 'airstrike' || !isOnline}
             searchLocation={searchLocation}
           />
           

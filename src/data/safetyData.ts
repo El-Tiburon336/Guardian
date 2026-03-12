@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 
 export interface District {
   id: string;
@@ -9,7 +9,7 @@ export interface District {
 
 export interface Alert {
   id: string;
-  type: 'danger' | 'warning' | 'info' | 'airstrike';
+  type: 'danger' | 'warning' | 'info' | 'airstrike' | 'road_closure';
   location: string;
   districtId: string;
   message: string;
@@ -21,7 +21,7 @@ export interface Alert {
 
 export interface EssentialService {
   id: string;
-  type: 'hospital' | 'bakery' | 'pharmacy' | 'fuel' | 'tools' | 'ngo';
+  type: 'hospital' | 'bakery' | 'pharmacy' | 'fuel' | 'tools' | 'ngo' | 'food_water';
   name: string;
   coordinates: [number, number];
   status: 'open' | 'closed' | 'limited';
@@ -65,6 +65,9 @@ export const essentialServices: EssentialService[] = [
   { id: 'caritas2', type: 'ngo', name: 'Caritas Center - Zahle', coordinates: [33.848, 35.902], status: 'open', aidType: 'shelter', hours: '09:00 - 17:00' },
   { id: 'unrwa1', type: 'ngo', name: 'UNRWA Shelter - Siblin', coordinates: [33.625, 35.452], status: 'open', aidType: 'shelter', hours: '24/7' },
   { id: 'unrwa2', type: 'ngo', name: 'UNRWA Shelter - Nahr el-Bared', coordinates: [34.512, 35.965], status: 'limited', aidType: 'shelter', hours: '24/7' },
+  { id: 'dist1', type: 'food_water', name: 'WFP Food Distribution - Tyre', coordinates: [33.275, 35.205], status: 'open', hours: '08:00 - 14:00' },
+  { id: 'dist2', type: 'food_water', name: 'Water Tanker Point - Dahieh', coordinates: [33.852, 35.508], status: 'open', hours: '07:00 - 19:00' },
+  { id: 'dist3', type: 'food_water', name: 'Community Kitchen - Tripoli', coordinates: [34.438, 35.838], status: 'open', hours: '12:00 - 15:00' },
 ];
 
 // Comprehensive list of Lebanese villages/towns for search
@@ -115,7 +118,7 @@ export function useSafetyData() {
     return () => clearInterval(interval);
   }, []);
 
-  const addAlert = (newAlert: Omit<Alert, 'id' | 'timestamp' | 'verified'>) => {
+  const addAlert = useCallback((newAlert: Omit<Alert, 'id' | 'timestamp' | 'verified'>) => {
     const alert: Alert = {
       ...newAlert,
       id: Math.random().toString(36).substr(2, 9),
@@ -123,7 +126,7 @@ export function useSafetyData() {
       verified: false,
     };
     setAlerts(prev => [alert, ...prev]);
-  };
+  }, []);
 
   return {
     districts,
