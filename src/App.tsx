@@ -41,7 +41,7 @@ import {
 } from 'lucide-react';
 import { GoogleGenAI, Type } from "@google/genai";
 import { QRCodeCanvas } from 'qrcode.react';
-import { motion, AnimatePresence } from 'motion/react';
+import { motion, AnimatePresence, useAnimation } from 'motion/react';
 import { JitsiMeeting } from '@jitsi/react-sdk';
 import { 
   MapContainer, 
@@ -737,7 +737,7 @@ const Sidebar = React.memo(({
           animate={{ x: 0 }}
           exit={{ x: isRTL ? '100%' : '-100%' }}
           transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-          className={`fixed inset-y-0 z-[2000] w-80 flex flex-col border-r transition-colors duration-500 backdrop-blur-xl ${theme === 'dark' ? 'bg-black/80 border-white/10' : 'bg-white/80 border-zinc-200 shadow-xl'} ${isRTL ? 'right-0' : 'left-0'}`}
+          className={`fixed inset-y-0 z-[2000] w-80 flex flex-col border-r transition-colors duration-500 backdrop-blur-xl ${theme === 'dark' ? 'bg-[#121212]/90 border-white/10' : 'bg-white/80 border-zinc-200 shadow-xl'} ${isRTL ? 'right-0' : 'left-0'}`}
         >
           <div className="p-6 flex flex-col h-full">
             <div className="flex items-center justify-between mb-8">
@@ -800,51 +800,57 @@ const SOSModal = ({ isOpen, onClose, t, isRTL, theme }: any) => {
   return (
     <AnimatePresence>
       {isOpen && (
-        <div className="fixed inset-0 z-[7000] flex items-center justify-center p-6">
+        <div className="fixed inset-0 z-[4000] flex items-center justify-center p-6">
           <motion.div 
             initial={{ opacity: 0 }} 
             animate={{ opacity: 1 }} 
             exit={{ opacity: 0 }} 
             onClick={onClose} 
-            className="absolute inset-0 bg-black/60 backdrop-blur-md" 
+            className="absolute inset-0 bg-black/90 backdrop-blur-xl" 
           />
           <motion.div 
             initial={{ scale: 0.9, opacity: 0, y: 20 }} 
             animate={{ scale: 1, opacity: 1, y: 0 }} 
             exit={{ scale: 0.9, opacity: 0, y: 20 }} 
-            className={`relative w-full max-w-[280px] rounded-[2.5rem] border overflow-hidden shadow-2xl ${theme === 'dark' ? 'bg-zinc-900/90 border-white/10' : 'bg-white/90 border-zinc-200'} backdrop-blur-2xl`}
+            className={`relative w-full max-w-sm rounded-[32px] p-8 text-center shadow-2xl border ${theme === 'dark' ? 'bg-[#121212] border-white/10' : 'bg-white border-zinc-200'}`}
           >
-            <div className="p-6 text-center space-y-6">
+            <div className="space-y-8">
               <div className="flex justify-center">
-                <div className="w-16 h-16 rounded-full bg-danger/20 flex items-center justify-center animate-pulse">
-                  <Phone className="w-8 h-8 text-danger" />
+                <div className="w-20 h-20 rounded-full bg-danger/10 flex items-center justify-center shadow-[0_0_40px_rgba(255,59,48,0.2)]">
+                  <Phone className="w-10 h-10 text-danger animate-pulse" />
                 </div>
               </div>
-              <div className="space-y-1">
-                <h2 className="text-xl font-black uppercase tracking-tight">{t.emergency}</h2>
-                <p className="text-[10px] text-zinc-500 font-bold uppercase tracking-widest">{t.directDial}</p>
+              <div className="space-y-2">
+                <h2 className="text-2xl font-black uppercase tracking-tight">{t.emergency}</h2>
+                <p className="text-xs text-zinc-500 font-bold uppercase tracking-widest">{t.directDial}</p>
               </div>
-              <div className="grid grid-cols-1 gap-3">
+              <div className="grid grid-cols-1 gap-4">
                 <motion.a 
                   whileTap={{ scale: 0.95 }}
                   href="tel:140"
-                  className="flex items-center justify-between p-4 rounded-2xl bg-danger text-black font-black transition-all shadow-lg"
+                  className="flex items-center justify-between p-6 rounded-[24px] bg-danger text-black font-black transition-all shadow-xl shadow-danger/20 group"
                 >
-                  <span className="text-sm">RED CROSS (140)</span>
-                  <PhoneOutgoing className="w-4 h-4" />
+                  <div className="flex flex-col items-start">
+                    <span className="text-[10px] opacity-70 uppercase tracking-widest">RED CROSS</span>
+                    <span className="text-xl">140</span>
+                  </div>
+                  <PhoneOutgoing className="w-6 h-6 group-hover:translate-x-1 transition-transform" />
                 </motion.a>
                 <motion.a 
                   whileTap={{ scale: 0.95 }}
                   href="tel:125"
-                  className="flex items-center justify-between p-4 rounded-2xl bg-zinc-800 text-white font-black transition-all shadow-lg"
+                  className={`flex items-center justify-between p-6 rounded-[24px] font-black transition-all shadow-xl ${theme === 'dark' ? 'bg-white text-black' : 'bg-zinc-900 text-white'} group`}
                 >
-                  <span className="text-sm">CIVIL DEFENSE (125)</span>
-                  <PhoneOutgoing className="w-4 h-4" />
+                  <div className="flex flex-col items-start">
+                    <span className="text-[10px] opacity-70 uppercase tracking-widest">CIVIL DEFENSE</span>
+                    <span className="text-xl">125</span>
+                  </div>
+                  <PhoneOutgoing className="w-6 h-6 group-hover:translate-x-1 transition-transform" />
                 </motion.a>
               </div>
               <button 
                 onClick={onClose}
-                className="text-[10px] font-black uppercase tracking-widest text-zinc-500 hover:text-zinc-300 transition-colors"
+                className="text-xs font-black uppercase tracking-widest text-zinc-500 hover:text-zinc-300 transition-colors py-2"
               >
                 {t.close}
               </button>
@@ -860,43 +866,70 @@ const SOSModal = ({ isOpen, onClose, t, isRTL, theme }: any) => {
 const BottomSheet = ({ 
   theme, t, isRTL, districts, startDistrict, setStartDistrict, endDistrict, setEndDistrict, 
   getDistrictName, calculateSafestRoute, isRouting, routePath, handleShare, filteredAlerts,
-  focusedAlertId, setFocusedAlertId, setIsReportModalOpen
+  focusedAlertId, setFocusedAlertId, setIsReportModalOpen, setIsVideoCallOpen
 }: any) => {
   const [isOpen, setIsOpen] = useState(false);
+  const controls = useAnimation();
+
+  const onDragEnd = (event: any, info: any) => {
+    if (info.offset.y < -50) setIsOpen(true);
+    if (info.offset.y > 50) setIsOpen(false);
+  };
   
   return (
     <motion.div
-      initial={{ y: 'calc(100% - 120px)' }}
-      animate={{ y: isOpen ? 0 : 'calc(100% - 120px)' }}
-      transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-      className={`fixed bottom-0 left-0 right-0 z-[1500] h-[75vh] rounded-t-[3rem] border-t backdrop-blur-3xl transition-colors duration-500 ${theme === 'dark' ? 'bg-black/60 border-white/10' : 'bg-white/70 border-zinc-200 shadow-[0_-20px_60px_rgba(0,0,0,0.15)]'}`}
+      drag="y"
+      dragConstraints={{ top: 0, bottom: 0 }}
+      onDragEnd={onDragEnd}
+      initial={{ y: 'calc(100% - 100px)' }}
+      animate={{ y: isOpen ? 0 : 'calc(100% - 100px)' }}
+      transition={{ type: 'spring', damping: 30, stiffness: 300 }}
+      className={`fixed bottom-0 left-0 right-0 z-[1500] h-[85vh] rounded-t-[40px] border-t backdrop-blur-3xl transition-colors duration-500 ${theme === 'dark' ? 'bg-[#121212]/80 border-white/10' : 'bg-white/90 border-zinc-200 shadow-[0_-20px_60px_rgba(0,0,0,0.1)]'}`}
     >
       <div 
-        className="w-full h-14 flex items-center justify-center cursor-pointer"
+        className="w-full h-14 flex flex-col items-center justify-center cursor-grab active:cursor-grabbing"
         onClick={() => setIsOpen(!isOpen)}
       >
-        <div className={`w-16 h-1.5 rounded-full ${theme === 'dark' ? 'bg-white/20' : 'bg-zinc-300'}`} />
+        <div className={`w-12 h-1.5 rounded-full mb-2 ${theme === 'dark' ? 'bg-white/20' : 'bg-zinc-300'}`} />
+        <p className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-500">{isOpen ? t.swipeDown : t.searchAndReport}</p>
       </div>
 
-      <div className="px-6 pb-20 h-full overflow-y-auto no-scrollbar">
+      <div className="px-6 pb-24 h-full overflow-y-auto no-scrollbar">
         <div className="max-w-2xl mx-auto space-y-10">
           {/* Action Section */}
-          <div className="grid grid-cols-1 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <motion.button 
               whileTap={{ scale: 0.98 }}
               onClick={() => setIsReportModalOpen(true)}
-              className="w-full p-5 rounded-3xl bg-danger/10 border border-danger/20 flex items-center justify-between group hover:bg-danger/20 transition-all"
+              className={`w-full p-6 rounded-[24px] border flex items-center justify-between group transition-all ${theme === 'dark' ? 'bg-danger/10 border-danger/20 hover:bg-danger/20' : 'bg-red-50 border-red-100 hover:bg-red-100'}`}
             >
               <div className="flex items-center gap-4">
-                <div className="p-3 rounded-2xl bg-danger text-black shadow-lg shadow-danger/20">
+                <div className="p-4 rounded-2xl bg-danger text-black shadow-xl shadow-danger/20">
                   <AlertTriangle className="w-6 h-6" />
                 </div>
                 <div className="text-left">
-                  <p className="text-sm font-black uppercase tracking-tight text-danger">{t.reportDanger}</p>
+                  <p className="text-base font-black uppercase tracking-tight text-danger">{t.reportDanger}</p>
                   <p className="text-[10px] text-zinc-500 font-bold uppercase tracking-widest">{t.communityAlert}</p>
                 </div>
               </div>
-              <ChevronRight className="w-5 h-5 text-danger opacity-50 group-hover:opacity-100 transition-opacity" />
+              <ChevronRight className="w-6 h-6 text-danger opacity-50 group-hover:opacity-100 transition-opacity" />
+            </motion.button>
+
+            <motion.button 
+              whileTap={{ scale: 0.98 }}
+              onClick={() => setIsVideoCallOpen(true)}
+              className={`w-full p-6 rounded-[24px] border flex items-center justify-between group transition-all ${theme === 'dark' ? 'bg-indigo-500/10 border-indigo-500/20 hover:bg-indigo-500/20' : 'bg-indigo-50 border-indigo-100 hover:bg-indigo-100'}`}
+            >
+              <div className="flex items-center gap-4">
+                <div className="p-4 rounded-2xl bg-indigo-500 text-white shadow-xl shadow-indigo-500/20">
+                  <Video className="w-6 h-6" />
+                </div>
+                <div className="text-left">
+                  <p className="text-base font-black uppercase tracking-tight text-indigo-500">{t.videoHub}</p>
+                  <p className="text-[10px] text-zinc-500 font-bold uppercase tracking-widest">{t.emergencyVideoCall}</p>
+                </div>
+              </div>
+              <ChevronRight className="w-6 h-6 text-indigo-500 opacity-50 group-hover:opacity-100 transition-opacity" />
             </motion.button>
           </div>
 
@@ -1158,6 +1191,14 @@ export default function App() {
   const isRTL = useMemo(() => language === 'ar', [language]);
   const isMobile = typeof window !== 'undefined' && window.innerWidth < 1024;
 
+  useEffect(() => {
+    if (t) {
+      t.swipeDown = language === 'ar' ? 'اسحب للأسفل' : language === 'fr' ? 'Balayer vers le bas' : 'Swipe Down';
+      t.searchAndReport = language === 'ar' ? 'بحث وإبلاغ' : language === 'fr' ? 'Recherche & Rapport' : 'Search & Report';
+      t.videoHub = language === 'ar' ? 'مركز الفيديو' : language === 'fr' ? 'Hub Vidéo' : 'Video Hub';
+    }
+  }, [t, language]);
+
   const [isVideoCallOpen, setIsVideoCallOpen] = useState(false);
   const [jitsiRoomId, setJitsiRoomId] = useState('');
 
@@ -1273,7 +1314,7 @@ export default function App() {
 
   return (
     <LanguageContext.Provider value={{ language, setLanguage, t, isRTL }}>
-      <div className={`flex h-screen w-full overflow-hidden font-sans transition-colors duration-500 ${theme === 'dark' ? 'bg-black text-white' : 'bg-zinc-50 text-zinc-900'}`}>
+      <div className={`flex h-screen w-full overflow-hidden font-sans transition-colors duration-500 ${theme === 'dark' ? 'bg-[#121212] text-white' : 'bg-zinc-50 text-zinc-900'}`}>
         <Sidebar 
           isSidebarOpen={isSidebarOpen} isMobile={isMobile} theme={theme} 
           setIsSidebarOpen={setIsSidebarOpen} setIsReportModalOpen={setIsReportModalOpen} 
@@ -1284,7 +1325,7 @@ export default function App() {
         />
 
       <main className="flex-1 flex flex-col relative min-w-0 h-full">
-        <header className={`fixed top-0 left-0 right-0 z-[1100] backdrop-blur-xl transition-colors duration-500 ${theme === 'dark' ? 'bg-black/40 border-b border-white/10' : 'bg-white/60 border-b border-zinc-200'}`}>
+        <header className={`fixed top-0 left-0 right-0 z-[1100] backdrop-blur-2xl transition-colors duration-500 ${theme === 'dark' ? 'bg-[#121212]/40 border-b border-white/10' : 'bg-white/60 border-b border-zinc-200'}`}>
           {!isOnline && (
             <div className="bg-zinc-800 text-white p-2 flex items-center justify-center gap-2 border-b border-white/5">
               <WifiOff className="w-3 h-3 text-zinc-400" />
@@ -1309,11 +1350,10 @@ export default function App() {
           <div className="max-w-4xl mx-auto p-4 space-y-4">
             <div className={`flex items-center justify-between ${isRTL ? 'flex-row-reverse' : ''}`}>
               <div className="flex items-center gap-3">
-                <motion.button whileTap={{ scale: 0.9 }} onClick={() => setIsSidebarOpen(true)} className={`p-2.5 rounded-xl border ${theme === 'dark' ? 'bg-white/5 border-white/10' : 'bg-zinc-100 border-zinc-200'}`}><Menu className="w-5 h-5" /></motion.button>
-                <h1 className="text-xl font-black tracking-tighter uppercase italic hidden sm:block" style={{ textAlign: 'left', direction: 'ltr' }}>GUARDIAN</h1>
+                <h1 className="text-2xl font-black tracking-tighter uppercase italic" style={{ textAlign: 'left', direction: 'ltr' }}>GUARDIAN</h1>
               </div>
               <div className="flex-1 mx-4 relative">
-                <div className={`flex items-center gap-3 px-4 py-2.5 rounded-2xl border transition-all ${theme === 'dark' ? 'bg-white/5 border-white/10 focus-within:border-white/30' : 'bg-zinc-100 border-zinc-200 focus-within:border-zinc-400'}`}>
+                <div className={`flex items-center gap-3 px-4 py-3 rounded-[24px] border transition-all ${theme === 'dark' ? 'bg-white/5 border-white/10 focus-within:border-white/30' : 'bg-zinc-100 border-zinc-200 focus-within:border-zinc-400'}`}>
                   <Search className="w-4 h-4 text-zinc-500" />
                   <input 
                     type="text" placeholder={t.searchPlaceholder} value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)}
@@ -1322,13 +1362,13 @@ export default function App() {
                 </div>
                 <AnimatePresence>
                   {searchResults.length > 0 && (
-                    <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 10 }} className={`absolute top-full left-0 right-0 mt-2 rounded-2xl border shadow-2xl overflow-hidden z-[1200] ${theme === 'dark' ? 'bg-zinc-900 border-white/10' : 'bg-white border-zinc-200'}`}>
+                    <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 10 }} className={`absolute top-full left-0 right-0 mt-2 rounded-[24px] border shadow-2xl overflow-hidden z-[1200] ${theme === 'dark' ? 'bg-zinc-900 border-white/10' : 'bg-white border-zinc-200'}`}>
                       {searchResults.map((loc, i) => (
                         <button key={i} onClick={() => { 
                           setSearchQuery(''); 
                           setFocusedAlertId(null);
                           setSearchLocation(loc.coords as [number, number]);
-                        }} className={`w-full p-4 text-left flex items-center gap-3 hover:bg-zinc-800 transition-colors ${i !== searchResults.length - 1 ? 'border-b border-white/5' : ''} ${isRTL ? 'flex-row-reverse text-right' : ''}`}>
+                        }} className={`w-full p-5 text-left flex items-center gap-3 hover:bg-zinc-800 transition-colors ${i !== searchResults.length - 1 ? 'border-b border-white/5' : ''} ${isRTL ? 'flex-row-reverse text-right' : ''}`}>
                           <MapPin className="w-4 h-4 text-zinc-500" />
                           <div><p className="text-sm font-bold">{language === 'ar' ? loc.ar : (language === 'fr' && loc.fr ? loc.fr : loc.name)}</p><p className="text-[10px] text-zinc-500">{language === 'en' ? loc.ar : loc.name}</p></div>
                         </button>
@@ -1338,46 +1378,34 @@ export default function App() {
                 </AnimatePresence>
               </div>
               <div className="flex items-center gap-2">
-                <motion.button whileTap={{ scale: 0.9 }} onClick={() => setIsSettingsOpen(true)} className={`p-2.5 rounded-xl border ${theme === 'dark' ? 'bg-white/5 border-white/10' : 'bg-zinc-100 border-zinc-200'}`}><SettingsIcon className="w-5 h-5" /></motion.button>
+                <motion.button whileTap={{ scale: 0.9 }} onClick={() => setIsSettingsOpen(true)} className={`p-3 rounded-[24px] border ${theme === 'dark' ? 'bg-white/5 border-white/10' : 'bg-zinc-100 border-zinc-200'}`}><SettingsIcon className="w-6 h-6" /></motion.button>
               </div>
             </div>
-            <div className="flex gap-2 overflow-x-auto no-scrollbar pb-1">
+            <div className="flex gap-2 overflow-x-auto no-scrollbar pb-2">
               <button 
                 onClick={() => setActiveFilter(activeFilter === 'airstrike' ? null : 'airstrike')} 
-                className={`flex items-center gap-2 px-4 py-2.5 rounded-full border text-[10px] font-black uppercase tracking-widest transition-all backdrop-blur-md whitespace-nowrap min-h-[44px] ${activeFilter === 'airstrike' ? 'bg-danger text-black border-danger shadow-[0_0_15px_rgba(255,59,48,0.4)]' : theme === 'dark' ? 'bg-white/5 border-white/10 text-zinc-400 hover:border-white/30' : 'bg-zinc-100 border-zinc-200 text-zinc-500 hover:border-zinc-300'}`}
+                className={`flex items-center gap-2 px-6 py-3 rounded-full border text-[10px] font-black uppercase tracking-widest transition-all backdrop-blur-md whitespace-nowrap min-h-[44px] ${activeFilter === 'airstrike' ? 'bg-danger text-black border-danger shadow-[0_0_20px_rgba(255,59,48,0.3)]' : theme === 'dark' ? 'bg-white/5 border-white/10 text-zinc-400 hover:border-white/30' : 'bg-zinc-100 border-zinc-200 text-zinc-500 hover:border-zinc-300'}`}
               >
-                <Flame className="w-3 h-3" />{t.airstrikes}
+                <Flame className="w-4 h-4" />{t.airstrikes}
               </button>
               <button 
                 onClick={() => setActiveFilter(activeFilter === 'road_closure' ? null : 'road_closure')} 
-                className={`flex items-center gap-2 px-4 py-2.5 rounded-full border text-[10px] font-black uppercase tracking-widest transition-all backdrop-blur-md whitespace-nowrap min-h-[44px] ${activeFilter === 'road_closure' ? 'bg-warning text-black border-warning shadow-[0_0_15px_rgba(255,149,0,0.4)]' : theme === 'dark' ? 'bg-white/5 border-white/10 text-zinc-400 hover:border-white/30' : 'bg-zinc-100 border-zinc-200 text-zinc-500 hover:border-zinc-300'}`}
+                className={`flex items-center gap-2 px-6 py-3 rounded-full border text-[10px] font-black uppercase tracking-widest transition-all backdrop-blur-md whitespace-nowrap min-h-[44px] ${activeFilter === 'road_closure' ? 'bg-warning text-black border-warning shadow-[0_0_20px_rgba(255,149,0,0.3)]' : theme === 'dark' ? 'bg-white/5 border-white/10 text-zinc-400 hover:border-white/30' : 'bg-zinc-100 border-zinc-200 text-zinc-500 hover:border-zinc-300'}`}
               >
-                <Construction className="w-3 h-3" />{t.roadStatus}
+                <Construction className="w-4 h-4" />{t.roadStatus}
               </button>
               <button 
                 onClick={() => setActiveFilter(activeFilter === 'earthquake' ? null : 'earthquake')} 
-                className={`flex items-center gap-2 px-4 py-2.5 rounded-full border text-[10px] font-black uppercase tracking-widest transition-all backdrop-blur-md whitespace-nowrap min-h-[44px] ${activeFilter === 'earthquake' ? 'bg-purple-500 text-black border-purple-500 shadow-[0_0_15px_rgba(168,85,247,0.4)]' : theme === 'dark' ? 'bg-white/5 border-white/10 text-zinc-400 hover:border-white/30' : 'bg-zinc-100 border-zinc-200 text-zinc-500 hover:border-zinc-300'}`}
+                className={`flex items-center gap-2 px-6 py-3 rounded-full border text-[10px] font-black uppercase tracking-widest transition-all backdrop-blur-md whitespace-nowrap min-h-[44px] ${activeFilter === 'earthquake' ? 'bg-purple-500 text-black border-purple-500 shadow-[0_0_20px_rgba(168,85,247,0.3)]' : theme === 'dark' ? 'bg-white/5 border-white/10 text-zinc-400 hover:border-white/30' : 'bg-zinc-100 border-zinc-200 text-zinc-500 hover:border-zinc-300'}`}
               >
-                <Waves className="w-3 h-3" />{t.earthquakes}
+                <Waves className="w-4 h-4" />{t.earthquakes}
               </button>
-              <button onClick={() => setActiveFilter(activeFilter === 'all' ? null : 'all')} className={`flex items-center gap-2 px-4 py-2.5 rounded-full border text-[10px] font-black uppercase tracking-widest transition-all backdrop-blur-md whitespace-nowrap min-h-[44px] ${activeFilter === 'all' ? 'bg-white text-black border-white' : theme === 'dark' ? 'bg-white/5 border-white/10 text-zinc-400 hover:border-white/30' : 'bg-zinc-100 border-zinc-200 text-zinc-500 hover:border-zinc-300'}`}><Shield className="w-3 h-3" />{t.allResources}</button>
               <button 
-                onClick={() => setActiveFilter(activeFilter === 'food_water' ? null : 'food_water')} 
-                className={`flex items-center gap-2 px-4 py-2.5 rounded-full border text-[10px] font-black uppercase tracking-widest transition-all backdrop-blur-md whitespace-nowrap min-h-[44px] ${activeFilter === 'food_water' ? 'bg-safety text-black border-safety shadow-[0_0_15px_rgba(52,199,89,0.4)]' : theme === 'dark' ? 'bg-white/5 border-white/10 text-zinc-400 hover:border-white/30' : 'bg-zinc-100 border-zinc-200 text-zinc-500 hover:border-zinc-300'}`}
+                onClick={() => setActiveFilter(activeFilter === 'ngo' ? null : 'ngo')} 
+                className={`flex items-center gap-2 px-6 py-3 rounded-full border text-[10px] font-black uppercase tracking-widest transition-all backdrop-blur-md whitespace-nowrap min-h-[44px] ${activeFilter === 'ngo' ? 'bg-safety text-black border-safety shadow-[0_0_20px_rgba(52,199,89,0.3)]' : theme === 'dark' ? 'bg-white/5 border-white/10 text-zinc-400 hover:border-white/30' : 'bg-zinc-100 border-zinc-200 text-zinc-500 hover:border-zinc-300'}`}
               >
-                <Package className="w-3 h-3" />{t.foodWater}
+                <HandHeart className="w-4 h-4" />NGOs
               </button>
-              {['hospital', 'bakery', 'pharmacy', 'fuel', 'tools', 'ngo'].map(type => (
-                <button key={type} onClick={() => setActiveFilter(activeFilter === type ? null : type)} className={`flex items-center gap-2 px-4 py-2.5 rounded-full border text-[10px] font-black uppercase tracking-widest transition-all backdrop-blur-md whitespace-nowrap min-h-[44px] ${activeFilter === type ? 'bg-white text-black border-white' : theme === 'dark' ? 'bg-white/5 border-white/10 text-zinc-400 hover:border-white/30' : 'bg-zinc-100 border-zinc-200 text-zinc-500 hover:border-zinc-300'}`}>
-                  {type === 'hospital' ? <Hospital className="w-3 h-3" /> : 
-                   type === 'bakery' ? <Utensils className="w-3 h-3" /> : 
-                   type === 'pharmacy' ? <Pill className="w-3 h-3" /> : 
-                   type === 'fuel' ? <Fuel className="w-3 h-3" /> : 
-                   type === 'ngo' ? <HandHeart className="w-3 h-3" /> :
-                   <Wrench className="w-3 h-3" />}
-                  {t[type + (type === 'tools' || type === 'ngo' ? '' : 's')]}
-                </button>
-              ))}
             </div>
           </div>
         </header>
@@ -1392,10 +1420,10 @@ export default function App() {
           
           {isReportingMode && (
             <div className="absolute inset-0 pointer-events-none z-10 flex items-center justify-center">
-              <div className="relative w-12 h-12">
-                <div className="absolute inset-0 border-2 border-danger rounded-full animate-ping" />
-                <div className="absolute top-1/2 left-0 w-full h-0.5 bg-danger" />
-                <div className="absolute left-1/2 top-0 w-0.5 h-full bg-danger" />
+              <div className="relative w-16 h-16">
+                <div className="absolute inset-0 border-4 border-danger rounded-full animate-ping" />
+                <div className="absolute top-1/2 left-0 w-full h-1 bg-danger" />
+                <div className="absolute left-1/2 top-0 w-1 h-full bg-danger" />
               </div>
             </div>
           )}
@@ -1405,7 +1433,7 @@ export default function App() {
             <motion.button 
               whileTap={{ scale: 0.9 }}
               onClick={() => setIsSOSModalOpen(true)}
-              className="w-16 h-16 rounded-full bg-danger flex items-center justify-center shadow-[0_0_30px_rgba(255,59,48,0.5)] border-4 border-white/20"
+              className="w-16 h-16 rounded-full bg-danger flex items-center justify-center shadow-[0_10px_30px_rgba(255,59,48,0.4)] border-4 border-white/20 active:scale-95 transition-transform"
             >
               <Phone className="w-8 h-8 text-black" />
             </motion.button>
@@ -1419,6 +1447,7 @@ export default function App() {
             isRouting={isRouting} routePath={routePath} handleShare={handleShare}
             filteredAlerts={filteredAlerts} focusedAlertId={focusedAlertId}
             setFocusedAlertId={setFocusedAlertId} setIsReportModalOpen={setIsReportModalOpen}
+            setIsVideoCallOpen={setIsVideoCallOpen}
           />
         </div>
       </main>
