@@ -34,11 +34,13 @@ import {
   Package,
   Construction,
   Fence,
-  Waves
+  Waves,
+  Video
 } from 'lucide-react';
 import { GoogleGenAI, Type } from "@google/genai";
 import { QRCodeCanvas } from 'qrcode.react';
 import { motion, AnimatePresence } from 'motion/react';
+import { JitsiMeeting } from '@jitsi/react-sdk';
 import { 
   MapContainer, 
   TileLayer, 
@@ -165,6 +167,10 @@ const TRANSLATIONS: Record<Language, any> = {
     gasLeakInstructions: "If you smell gas: Open windows, do not use switches, leave immediately.",
     safetyDisclaimerTitle: "Safety Disclaimer",
     safetyDisclaimerMessage: "This app provides safety data for informational purposes only. Always prioritize local authorities' instructions. Stay safe.",
+    videoCall: "Video Call",
+    shareCallLink: "Share Call Link",
+    hangUp: "Hang Up",
+    emergencyVideoCall: "Emergency Video Call",
     districts: {
       dahieh: "Dahieh",
       beirut: "Beirut",
@@ -265,6 +271,10 @@ const TRANSLATIONS: Record<Language, any> = {
     gasLeakInstructions: "إذا شممت رائحة غاز: افتح النوافذ، لا تستخدم المفاتيح الكهربائية، وغادر فوراً.",
     safetyDisclaimerTitle: "إخلاء مسؤولية الأمان",
     safetyDisclaimerMessage: "يوفر هذا التطبيق بيانات الأمان لأغراض إعلامية فقط. أعطِ الأولوية دائماً لتعليمات السلطات المحلية. ابقَ آمناً.",
+    videoCall: "اتصال فيديو",
+    shareCallLink: "مشاركة رابط المكالمة",
+    hangUp: "إنهاء المكالمة",
+    emergencyVideoCall: "اتصال فيديو الطوارئ",
     districts: {
       dahieh: "الضاحية",
       beirut: "بيروت",
@@ -365,6 +375,10 @@ const TRANSLATIONS: Record<Language, any> = {
     gasLeakInstructions: "Si vous sentez du gaz : ouvrez les fenêtres, n'utilisez pas d'interrupteurs, partez immédiatement.",
     safetyDisclaimerTitle: "Avis de sécurité",
     safetyDisclaimerMessage: "Cette application fournit des données de sécurité à titre informatif uniquement. Priorisez toujours les instructions des autorités locales. Restez en sécurité.",
+    videoCall: "Appel Vidéo",
+    shareCallLink: "Partager le lien",
+    hangUp: "Raccrocher",
+    emergencyVideoCall: "Appel Vidéo d'Urgence",
     districts: {
       dahieh: "Dahieh",
       beirut: "Beyrouth",
@@ -710,7 +724,7 @@ const MapComponent = React.memo(({
 
 // --- Sidebar ---
 const Sidebar = React.memo(({
-  isSidebarOpen, isMobile, theme, setIsSidebarOpen, setIsReportModalOpen, filteredAlerts, focusedAlertId, setFocusedAlertId, getDistrictName, isBackoffActive
+  isSidebarOpen, isMobile, theme, setIsSidebarOpen, setIsReportModalOpen, filteredAlerts, focusedAlertId, setFocusedAlertId, getDistrictName, isBackoffActive, onStartVideoCall
 }: any) => {
   const { t, isRTL } = useLanguage();
   return (
@@ -800,6 +814,16 @@ const Sidebar = React.memo(({
                 >
                   <ShieldCheck className="w-4 h-4 text-safety mb-1" />
                   <span className="text-[8px] font-black uppercase tracking-widest text-center">{t.iAmSafe}</span>
+                </motion.button>
+              </div>
+              <div className="grid grid-cols-1 gap-2">
+                <motion.button 
+                  whileTap={{ scale: 0.95 }}
+                  onClick={onStartVideoCall}
+                  className={`flex items-center justify-center gap-3 p-4 rounded-2xl border ${theme === 'dark' ? 'bg-indigo-500/10 border-indigo-500/30 hover:bg-indigo-500/20' : 'bg-indigo-50 border-indigo-100 hover:bg-indigo-100'} transition-all`}
+                >
+                  <Video className="w-5 h-5 text-indigo-500" />
+                  <span className="text-xs font-black uppercase tracking-widest">{t.videoCall}</span>
                 </motion.button>
               </div>
             </div>
@@ -1070,6 +1094,24 @@ export default function App() {
   const [shareToast, setShareToast] = useState(false);
   const [showWelcome, setShowWelcome] = useState(false);
   const [isQRModalOpen, setIsQRModalOpen] = useState(false);
+  const t = useMemo(() => TRANSLATIONS[language], [language]);
+  const isRTL = useMemo(() => language === 'ar', [language]);
+  const isMobile = typeof window !== 'undefined' && window.innerWidth < 1024;
+
+  const [isVideoCallOpen, setIsVideoCallOpen] = useState(false);
+  const [jitsiRoomId, setJitsiRoomId] = useState('');
+
+  const handleStartVideoCall = useCallback(() => {
+    const roomId = `Guardian-LB-${Math.floor(100000 + Math.random() * 900000)}`;
+    setJitsiRoomId(roomId);
+    setIsVideoCallOpen(true);
+  }, []);
+
+  const handleShareVideoCall = useCallback(() => {
+    const url = `https://meet.jit.si/${jitsiRoomId}`;
+    const message = encodeURIComponent(`${t.emergencyVideoCall}: ${url}`);
+    window.open(`https://wa.me/?text=${message}`, '_blank');
+  }, [jitsiRoomId, t.emergencyVideoCall]);
 
   useEffect(() => {
     if ('serviceWorker' in navigator) {
@@ -1082,10 +1124,6 @@ export default function App() {
       });
     }
   }, []);
-
-  const t = useMemo(() => TRANSLATIONS[language], [language]);
-  const isRTL = useMemo(() => language === 'ar', [language]);
-  const isMobile = typeof window !== 'undefined' && window.innerWidth < 1024;
 
   useEffect(() => {
     const hasSeenWelcome = localStorage.getItem('guardian-welcome-seen');
@@ -1182,6 +1220,7 @@ export default function App() {
           filteredAlerts={filteredAlerts} focusedAlertId={focusedAlertId} 
           setFocusedAlertId={setFocusedAlertId} getDistrictName={getDistrictName}
           isBackoffActive={isBackoffActive}
+          onStartVideoCall={handleStartVideoCall}
         />
 
       <main className="flex-1 flex flex-col relative min-w-0 h-full">
@@ -1447,6 +1486,73 @@ export default function App() {
                 </div>
                 <p className={`text-sm leading-relaxed text-zinc-400 mb-8 ${isRTL ? 'text-right' : ''}`}>{t.safetyDisclaimerMessage}</p>
                 <button onClick={dismissWelcome} className="w-full py-4 rounded-2xl bg-danger text-black font-black uppercase tracking-widest text-xs shadow-lg shadow-danger/20">{t.understand}</button>
+              </motion.div>
+            </div>
+          )}
+        </AnimatePresence>
+
+        {/* Video Call Modal */}
+        <AnimatePresence>
+          {isVideoCallOpen && (
+            <div className="fixed inset-0 z-[6000] flex items-center justify-center p-0 sm:p-4">
+              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="absolute inset-0 bg-black/95 backdrop-blur-xl" />
+              <motion.div 
+                initial={{ scale: 0.95, opacity: 0, y: 20 }} 
+                animate={{ scale: 1, opacity: 1, y: 0 }} 
+                exit={{ scale: 0.95, opacity: 0, y: 20 }} 
+                className="relative w-full h-full sm:max-w-5xl sm:h-[80vh] bg-black rounded-none sm:rounded-[3rem] border-none sm:border border-white/10 overflow-hidden flex flex-col shadow-2xl"
+              >
+                <div className="p-4 sm:p-6 border-b border-white/10 flex justify-between items-center bg-zinc-900/50">
+                  <div className="flex items-center gap-3">
+                    <div className="bg-indigo-500 p-2 rounded-xl"><Video className="w-5 h-5 text-black" /></div>
+                    <div>
+                      <h2 className="text-sm sm:text-lg font-black uppercase tracking-tight text-white">{t.emergencyVideoCall}</h2>
+                      <p className="text-[8px] sm:text-[10px] text-zinc-500 font-bold uppercase tracking-widest">{jitsiRoomId}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <motion.button 
+                      whileTap={{ scale: 0.9 }} 
+                      onClick={handleShareVideoCall}
+                      className="flex items-center gap-2 px-3 sm:px-4 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-white text-[10px] font-bold uppercase tracking-widest transition-all"
+                    >
+                      <Share2 className="w-3 h-3 sm:w-4 h-4" />
+                      <span className="hidden sm:inline">{t.shareCallLink}</span>
+                    </motion.button>
+                    <motion.button 
+                      whileTap={{ scale: 0.9 }} 
+                      onClick={() => setIsVideoCallOpen(false)}
+                      className="flex items-center gap-2 px-3 sm:px-4 py-2 rounded-xl bg-danger text-black text-[10px] font-bold uppercase tracking-widest transition-all"
+                    >
+                      <X className="w-3 h-3 sm:w-4 h-4" />
+                      <span>{t.hangUp}</span>
+                    </motion.button>
+                  </div>
+                </div>
+                <div className="flex-1 bg-black relative">
+                  <JitsiMeeting
+                    domain="meet.jit.si"
+                    roomName={jitsiRoomId}
+                    configOverwrite={{
+                      startWithAudioMuted: false,
+                      disableModeratorIndicator: true,
+                      startScreenSharing: false,
+                      enableEmailInStats: false,
+                      prejoinPageEnabled: false,
+                    }}
+                    interfaceConfigOverwrite={{
+                      DISABLE_JOIN_LEAVE_NOTIFICATIONS: true,
+                    }}
+                    userInfo={{
+                      displayName: `Guardian User (${language.toUpperCase()})`,
+                      email: ''
+                    }}
+                    getIFrameRef={(iframeRef) => {
+                      iframeRef.style.height = '100%';
+                      iframeRef.style.width = '100%';
+                    }}
+                  />
+                </div>
               </motion.div>
             </div>
           )}
