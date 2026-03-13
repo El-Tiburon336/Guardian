@@ -35,7 +35,9 @@ import {
   Construction,
   Fence,
   Waves,
-  Video
+  Video,
+  PhoneOutgoing,
+  ChevronRight
 } from 'lucide-react';
 import { GoogleGenAI, Type } from "@google/genai";
 import { QRCodeCanvas } from 'qrcode.react';
@@ -731,13 +733,12 @@ const Sidebar = React.memo(({
     <AnimatePresence mode="wait">
       {isSidebarOpen && (
         <motion.aside
-          initial={isMobile ? { y: '100%' } : { x: isRTL ? '100%' : '-100%' }}
-          animate={isMobile ? { y: 0 } : { x: 0 }}
-          exit={isMobile ? { y: '100%' } : { x: isRTL ? '100%' : '-100%' }}
+          initial={isMobile ? { x: isRTL ? '100%' : '-100%' } : { x: isRTL ? '100%' : '-100%' }}
+          animate={{ x: 0 }}
+          exit={{ x: isRTL ? '100%' : '-100%' }}
           transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-          className={`fixed inset-y-0 z-[2000] w-full lg:w-80 lg:static flex flex-col border-r transition-colors duration-500 ${theme === 'dark' ? 'bg-black border-white/10' : 'bg-white border-zinc-200 shadow-xl'} ${isMobile ? 'rounded-t-[3rem] top-20' : ''} ${isRTL ? 'right-0' : 'left-0'}`}
+          className={`fixed inset-y-0 z-[2000] w-80 flex flex-col border-r transition-colors duration-500 backdrop-blur-xl ${theme === 'dark' ? 'bg-black/80 border-white/10' : 'bg-white/80 border-zinc-200 shadow-xl'} ${isRTL ? 'right-0' : 'left-0'}`}
         >
-          {isMobile && <div className="flex justify-center p-4"><div className="w-12 h-1.5 bg-zinc-800 rounded-full" /></div>}
           <div className="p-6 flex flex-col h-full">
             <div className="flex items-center justify-between mb-8">
               <div className="flex items-center gap-3">
@@ -747,155 +748,213 @@ const Sidebar = React.memo(({
               <motion.button whileTap={{ scale: 0.9 }} onClick={() => setIsSidebarOpen(false)} className={`p-2 rounded-xl ${theme === 'dark' ? 'hover:bg-white/5' : 'hover:bg-zinc-100'}`}><X className="w-5 h-5" /></motion.button>
             </div>
 
-            {/* Pinned SOS Section */}
-            <div className="mb-6 space-y-3">
-              <h3 className="text-[10px] font-black uppercase tracking-widest text-danger px-2">{t.emergencyContacts}</h3>
-              <div className="grid grid-cols-2 gap-2">
+            <div className="flex-1 overflow-y-auto no-scrollbar space-y-8">
+              <div className="space-y-4">
+                <h3 className="text-[10px] font-black uppercase tracking-widest text-zinc-500 px-2">{t.videoHub}</h3>
+                <motion.button 
+                  whileTap={{ scale: 0.95 }}
+                  onClick={onStartVideoCall}
+                  className={`w-full flex items-center justify-center gap-3 p-5 rounded-3xl border ${theme === 'dark' ? 'bg-indigo-500/10 border-indigo-500/30 hover:bg-indigo-500/20' : 'bg-indigo-50 border-indigo-100 hover:bg-indigo-100'} transition-all shadow-lg shadow-indigo-500/5`}
+                >
+                  <Video className="w-6 h-6 text-indigo-500" />
+                  <span className="text-sm font-black uppercase tracking-widest">{t.emergencyVideoCall}</span>
+                </motion.button>
+              </div>
+
+              <div className="space-y-4">
+                <h3 className="text-[10px] font-black uppercase tracking-widest text-zinc-500 px-2">{t.survivalGuide}</h3>
+                <div className="space-y-3">
+                  <div className={`p-5 rounded-3xl border ${theme === 'dark' ? 'bg-white/5 border-white/5' : 'bg-zinc-50 border-zinc-100'}`}>
+                    <div className="flex items-center gap-3 mb-3">
+                      <div className="p-2 rounded-xl bg-purple-500/20"><Waves className="w-5 h-5 text-purple-500" /></div>
+                      <p className="text-xs font-black uppercase tracking-widest">{t.earthquakeSafety}</p>
+                    </div>
+                    <p className="text-xs text-zinc-500 leading-relaxed">{t.seismicInstructions}</p>
+                  </div>
+                  <div className={`p-5 rounded-3xl border ${theme === 'dark' ? 'bg-white/5 border-white/5' : 'bg-zinc-50 border-zinc-100'}`}>
+                    <div className="flex items-center gap-3 mb-3">
+                      <div className="p-2 rounded-xl bg-warning/20"><Flame className="w-5 h-5 text-warning" /></div>
+                      <p className="text-xs font-black uppercase tracking-widest">{t.gasLeakSafety}</p>
+                    </div>
+                    <p className="text-xs text-zinc-500 leading-relaxed">{t.gasLeakInstructions}</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className={`mt-auto pt-6 border-t ${theme === 'dark' ? 'border-white/10' : 'border-zinc-100'}`}>
+              <div className={`p-4 rounded-2xl flex items-center gap-4 ${theme === 'dark' ? 'bg-white/5' : 'bg-zinc-50'}`}>
+                <div className="bg-safety/20 p-2 rounded-lg"><Zap className="text-safety w-4 h-4" /></div>
+                <div><p className="text-[10px] font-black uppercase tracking-widest">{t.lowBandwidth}</p><p className="text-[8px] text-zinc-500">{t.optimized3G}</p></div>
+              </div>
+            </div>
+          </div>
+        </motion.aside>
+      )}
+    </AnimatePresence>
+  );
+});
+
+// --- SOS Modal ---
+const SOSModal = ({ isOpen, onClose, t, isRTL, theme }: any) => {
+  return (
+    <AnimatePresence>
+      {isOpen && (
+        <div className="fixed inset-0 z-[7000] flex items-center justify-center p-6">
+          <motion.div 
+            initial={{ opacity: 0 }} 
+            animate={{ opacity: 1 }} 
+            exit={{ opacity: 0 }} 
+            onClick={onClose} 
+            className="absolute inset-0 bg-black/60 backdrop-blur-md" 
+          />
+          <motion.div 
+            initial={{ scale: 0.9, opacity: 0, y: 20 }} 
+            animate={{ scale: 1, opacity: 1, y: 0 }} 
+            exit={{ scale: 0.9, opacity: 0, y: 20 }} 
+            className={`relative w-full max-w-[280px] rounded-[2.5rem] border overflow-hidden shadow-2xl ${theme === 'dark' ? 'bg-zinc-900/90 border-white/10' : 'bg-white/90 border-zinc-200'} backdrop-blur-2xl`}
+          >
+            <div className="p-6 text-center space-y-6">
+              <div className="flex justify-center">
+                <div className="w-16 h-16 rounded-full bg-danger/20 flex items-center justify-center animate-pulse">
+                  <Phone className="w-8 h-8 text-danger" />
+                </div>
+              </div>
+              <div className="space-y-1">
+                <h2 className="text-xl font-black uppercase tracking-tight">{t.emergency}</h2>
+                <p className="text-[10px] text-zinc-500 font-bold uppercase tracking-widest">{t.directDial}</p>
+              </div>
+              <div className="grid grid-cols-1 gap-3">
                 <motion.a 
                   whileTap={{ scale: 0.95 }}
                   href="tel:140"
-                  className={`flex flex-col items-center justify-center p-3 rounded-2xl border ${theme === 'dark' ? 'bg-danger/10 border-danger/30 hover:bg-danger/20' : 'bg-red-50 border-red-100 hover:bg-red-100'} transition-all`}
+                  className="flex items-center justify-between p-4 rounded-2xl bg-danger text-black font-black transition-all shadow-lg"
                 >
-                  <div className="bg-danger p-2 rounded-lg mb-2"><Phone className="w-4 h-4 text-black" /></div>
-                  <span className="text-[10px] font-black uppercase tracking-tighter">{t.lrc}</span>
-                  <span className="text-xs font-black">140</span>
+                  <span className="text-sm">RED CROSS (140)</span>
+                  <PhoneOutgoing className="w-4 h-4" />
                 </motion.a>
                 <motion.a 
                   whileTap={{ scale: 0.95 }}
                   href="tel:125"
-                  className={`flex flex-col items-center justify-center p-3 rounded-2xl border ${theme === 'dark' ? 'bg-danger/10 border-danger/30 hover:bg-danger/20' : 'bg-red-50 border-red-100 hover:bg-red-100'} transition-all`}
+                  className="flex items-center justify-between p-4 rounded-2xl bg-zinc-800 text-white font-black transition-all shadow-lg"
                 >
-                  <div className="bg-danger p-2 rounded-lg mb-2"><LifeBuoy className="w-4 h-4 text-black" /></div>
-                  <span className="text-[10px] font-black uppercase tracking-tighter">{t.civilDefense}</span>
-                  <span className="text-xs font-black">125</span>
+                  <span className="text-sm">CIVIL DEFENSE (125)</span>
+                  <PhoneOutgoing className="w-4 h-4" />
                 </motion.a>
               </div>
-              <div className="grid grid-cols-2 gap-2">
-                <motion.button 
-                  whileTap={{ scale: 0.95 }}
-                  onClick={() => {
-                    if ("geolocation" in navigator) {
-                      navigator.geolocation.getCurrentPosition((position) => {
-                        const { latitude, longitude } = position.coords;
-                        const mapsUrl = `https://www.google.com/maps?q=${latitude},${longitude}`;
-                        const message = encodeURIComponent(`${t.whatsappMessage}${mapsUrl}`);
-                        window.open(`https://wa.me/?text=${message}`, '_blank');
-                      }, (error) => {
-                        console.error("Error getting location:", error);
-                        alert("Please enable location services to share your GPS coordinates.");
-                      });
-                    } else {
-                      alert("Geolocation is not supported by your browser.");
-                    }
-                  }}
-                  className={`flex flex-col items-center justify-center p-3 rounded-2xl border ${theme === 'dark' ? 'bg-white/5 border-white/10 hover:bg-white/10' : 'bg-zinc-50 border-zinc-200 hover:bg-zinc-100'} transition-all`}
-                >
-                  <MessageSquare className="w-4 h-4 text-safety mb-1" />
-                  <span className="text-[8px] font-black uppercase tracking-widest text-center">{t.shareLocation}</span>
-                </motion.button>
-                <motion.button 
-                  whileTap={{ scale: 0.95 }}
-                  onClick={() => {
-                    if ("geolocation" in navigator) {
-                      navigator.geolocation.getCurrentPosition((position) => {
-                        const { latitude, longitude } = position.coords;
-                        const mapsUrl = `https://www.google.com/maps?q=${latitude},${longitude}`;
-                        const message = encodeURIComponent(`${t.iAmSafeMessage}${mapsUrl}`);
-                        window.open(`https://wa.me/?text=${message}`, '_blank');
-                      }, (error) => {
-                        console.error("Error getting location:", error);
-                        alert("Please enable location services to share your GPS coordinates.");
-                      });
-                    } else {
-                      alert("Geolocation is not supported by your browser.");
-                    }
-                  }}
-                  className={`flex flex-col items-center justify-center p-3 rounded-2xl border ${theme === 'dark' ? 'bg-safety/10 border-safety/30 hover:bg-safety/20' : 'bg-green-50 border-green-100 hover:bg-green-100'} transition-all`}
-                >
-                  <ShieldCheck className="w-4 h-4 text-safety mb-1" />
-                  <span className="text-[8px] font-black uppercase tracking-widest text-center">{t.iAmSafe}</span>
-                </motion.button>
-              </div>
-              <div className="grid grid-cols-1 gap-2">
-                <motion.button 
-                  whileTap={{ scale: 0.95 }}
-                  onClick={onStartVideoCall}
-                  className={`flex items-center justify-center gap-3 p-4 rounded-2xl border ${theme === 'dark' ? 'bg-indigo-500/10 border-indigo-500/30 hover:bg-indigo-500/20' : 'bg-indigo-50 border-indigo-100 hover:bg-indigo-100'} transition-all`}
-                >
-                  <Video className="w-5 h-5 text-indigo-500" />
-                  <span className="text-xs font-black uppercase tracking-widest">{t.videoCall}</span>
-                </motion.button>
-              </div>
+              <button 
+                onClick={onClose}
+                className="text-[10px] font-black uppercase tracking-widest text-zinc-500 hover:text-zinc-300 transition-colors"
+              >
+                {t.close}
+              </button>
             </div>
+          </motion.div>
+        </div>
+      )}
+    </AnimatePresence>
+  );
+};
 
-            <div className="flex-1 overflow-y-auto no-scrollbar space-y-6">
-            <motion.button whileTap={{ scale: 0.95 }} onClick={() => setIsReportModalOpen(true)} className="w-full bg-danger text-black py-4 rounded-2xl font-black uppercase tracking-widest text-xs shadow-[0_0_20px_rgba(255,59,48,0.3)] flex items-center justify-center gap-2 mb-2">
-              <AlertTriangle className="w-4 h-4" />{t.reportDanger}
+// --- Bottom Sheet ---
+const BottomSheet = ({ 
+  theme, t, isRTL, districts, startDistrict, setStartDistrict, endDistrict, setEndDistrict, 
+  getDistrictName, calculateSafestRoute, isRouting, routePath, handleShare, filteredAlerts,
+  focusedAlertId, setFocusedAlertId, setIsReportModalOpen
+}: any) => {
+  const [isOpen, setIsOpen] = useState(false);
+  
+  return (
+    <motion.div
+      initial={{ y: 'calc(100% - 120px)' }}
+      animate={{ y: isOpen ? 0 : 'calc(100% - 120px)' }}
+      transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+      className={`fixed bottom-0 left-0 right-0 z-[1500] h-[75vh] rounded-t-[3rem] border-t backdrop-blur-3xl transition-colors duration-500 ${theme === 'dark' ? 'bg-black/60 border-white/10' : 'bg-white/70 border-zinc-200 shadow-[0_-20px_60px_rgba(0,0,0,0.15)]'}`}
+    >
+      <div 
+        className="w-full h-14 flex items-center justify-center cursor-pointer"
+        onClick={() => setIsOpen(!isOpen)}
+      >
+        <div className={`w-16 h-1.5 rounded-full ${theme === 'dark' ? 'bg-white/20' : 'bg-zinc-300'}`} />
+      </div>
+
+      <div className="px-6 pb-20 h-full overflow-y-auto no-scrollbar">
+        <div className="max-w-2xl mx-auto space-y-10">
+          {/* Action Section */}
+          <div className="grid grid-cols-1 gap-4">
+            <motion.button 
+              whileTap={{ scale: 0.98 }}
+              onClick={() => setIsReportModalOpen(true)}
+              className="w-full p-5 rounded-3xl bg-danger/10 border border-danger/20 flex items-center justify-between group hover:bg-danger/20 transition-all"
+            >
+              <div className="flex items-center gap-4">
+                <div className="p-3 rounded-2xl bg-danger text-black shadow-lg shadow-danger/20">
+                  <AlertTriangle className="w-6 h-6" />
+                </div>
+                <div className="text-left">
+                  <p className="text-sm font-black uppercase tracking-tight text-danger">{t.reportDanger}</p>
+                  <p className="text-[10px] text-zinc-500 font-bold uppercase tracking-widest">{t.communityAlert}</p>
+                </div>
+              </div>
+              <ChevronRight className="w-5 h-5 text-danger opacity-50 group-hover:opacity-100 transition-opacity" />
             </motion.button>
-            <div className="space-y-3">
-              <h3 className="text-[10px] font-black uppercase tracking-widest text-zinc-500 px-2">{t.liveSafetyFeed}</h3>
-              <div className="space-y-2">
-                {filteredAlerts.map((alert: Alert) => (
-                  <motion.div
-                    key={alert.id} layout initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }}
-                    onClick={() => setFocusedAlertId(focusedAlertId === alert.id ? null : alert.id)}
-                    className={`p-4 rounded-2xl border cursor-pointer transition-all ${focusedAlertId === alert.id ? 'bg-danger/10 border-danger' : theme === 'dark' ? 'bg-white/5 border-white/5 hover:border-white/20' : 'bg-zinc-50 border-zinc-100 hover:border-zinc-300'}`}
-                  >
-                    <div className="flex justify-between items-start mb-2">
-                      <div className="flex flex-col gap-1">
-                        <span className={`text-[8px] font-black uppercase tracking-tighter px-2 py-0.5 rounded w-fit ${alert.type === 'danger' || alert.type === 'airstrike' ? 'bg-danger text-black' : alert.type === 'road_closure' ? 'bg-warning text-black' : 'bg-safety text-black'}`}>{alert.type === 'road_closure' ? t.roadClosure : alert.type}</span>
-                        <span className={`text-[7px] font-bold uppercase tracking-widest px-1.5 py-0.5 rounded border ${alert.isUserReported ? 'border-warning/50 text-warning bg-warning/5' : 'border-safety/50 text-safety bg-safety/5'}`}>
-                          {alert.type === 'road_closure' && !alert.isUserReported ? t.verifiedISF : alert.isUserReported ? t.communityAlert : t.nnaVerified}
-                        </span>
-                      </div>
-                      <span className="text-[8px] font-mono text-zinc-500">{alert.timestamp}</span>
-                    </div>
-                    <div className="flex items-center gap-1 mb-1"><MapPin className="w-3 h-3 text-zinc-500" /><p className={`text-xs font-bold ${theme === 'dark' ? 'text-white' : 'text-zinc-900'}`}>{alert.location} ({getDistrictName(alert.districtId)})</p></div>
-                    <p className="text-[10px] text-zinc-500 leading-relaxed">{alert.message}</p>
-                  </motion.div>
-                ))}
-              </div>
-            </div>
-
-            <div className="space-y-3 mt-6">
-              <h3 className="text-[10px] font-black uppercase tracking-widest text-zinc-500 px-2">{t.survivalGuide}</h3>
-              <div className="space-y-2">
-                <div className={`p-4 rounded-2xl border ${theme === 'dark' ? 'bg-white/5 border-white/5' : 'bg-zinc-50 border-zinc-100'}`}>
-                  <div className="flex items-center gap-2 mb-2">
-                    <Waves className="w-4 h-4 text-purple-500" />
-                    <p className="text-[10px] font-black uppercase tracking-widest">{t.earthquakeSafety}</p>
-                  </div>
-                  <p className="text-[10px] text-zinc-500 leading-relaxed">{t.seismicInstructions}</p>
-                </div>
-                <div className={`p-4 rounded-2xl border ${theme === 'dark' ? 'bg-white/5 border-white/5' : 'bg-zinc-50 border-zinc-100'}`}>
-                  <div className="flex items-center gap-2 mb-2">
-                    <Flame className="w-4 h-4 text-warning" />
-                    <p className="text-[10px] font-black uppercase tracking-widest">{t.gasLeakSafety}</p>
-                  </div>
-                  <p className="text-[10px] text-zinc-500 leading-relaxed">{t.gasLeakInstructions}</p>
-                </div>
-              </div>
-            </div>
-
           </div>
-          <div className={`mt-auto pt-6 border-t ${theme === 'dark' ? 'border-white/10' : 'border-zinc-100'}`}>
-            {isBackoffActive && (
-              <div className="mb-4 p-3 rounded-xl bg-warning/10 border border-warning/30 flex items-center gap-3">
-                <BatteryLow className="text-warning w-4 h-4" />
-                <p className="text-[8px] text-warning font-bold uppercase tracking-widest">Rate limit reached. Updates paused for 10m.</p>
+
+          {/* Routing Section */}
+          <div className="space-y-6">
+            <h3 className="text-[10px] font-black uppercase tracking-widest text-zinc-500 px-2">{t.routeFinding}</h3>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <label className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">{t.startPoint}</label>
+                <select value={startDistrict} onChange={(e) => setStartDistrict(e.target.value)} className={`w-full border rounded-2xl p-4 text-sm focus:outline-none focus:ring-2 focus:ring-safety/50 appearance-none ${theme === 'dark' ? 'bg-white/5 border-white/10 text-white' : 'bg-zinc-50 border-zinc-200 text-zinc-900'}`}>
+                  <option value="">{t.selectDistrict}</option>
+                  {districts.map((d: any) => <option key={d.id} value={d.id}>{getDistrictName(d.id)}</option>)}
+                </select>
               </div>
-            )}
-            <div className={`p-4 rounded-2xl flex items-center gap-4 ${theme === 'dark' ? 'bg-white/5' : 'bg-zinc-50'}`}>
-              <div className="bg-safety/20 p-2 rounded-lg"><Zap className="text-safety w-4 h-4" /></div>
-              <div><p className="text-[10px] font-black uppercase tracking-widest">{t.lowBandwidth}</p><p className="text-[8px] text-zinc-500">{t.optimized3G}</p></div>
+              <div className="space-y-2">
+                <label className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">{t.destination}</label>
+                <select value={endDistrict} onChange={(e) => setEndDistrict(e.target.value)} className={`w-full border rounded-2xl p-4 text-sm focus:outline-none focus:ring-2 focus:ring-safety/50 appearance-none ${theme === 'dark' ? 'bg-white/5 border-white/10 text-white' : 'bg-zinc-50 border-zinc-200 text-zinc-900'}`}>
+                  <option value="">{t.selectDistrict}</option>
+                  {districts.map((d: any) => <option key={d.id} value={d.id}>{getDistrictName(d.id)}</option>)}
+                </select>
+              </div>
+            </div>
+            <div className="flex gap-3">
+              <motion.button whileTap={{ scale: 0.95 }} onClick={calculateSafestRoute} disabled={!startDistrict || !endDistrict || isRouting} className={`flex-1 flex items-center justify-center gap-2 font-bold px-8 py-4 rounded-2xl transition-all shadow-lg ${startDistrict && endDistrict && !isRouting ? 'bg-safety text-black hover:bg-safety/90' : 'bg-zinc-800 text-zinc-500 cursor-not-allowed'}`}>{isRouting ? <><Activity className="w-5 h-5 animate-spin" />{t.routing}</> : <><Navigation className="w-5 h-5" />{t.findSafestPath}</>}</motion.button>
+              {routePath.length > 0 && <motion.button whileTap={{ scale: 0.95 }} onClick={handleShare} className="bg-zinc-800 text-white p-4 rounded-2xl hover:bg-zinc-700 transition-all shadow-lg"><Share2 className="w-5 h-5" /></motion.button>}
+            </div>
+          </div>
+
+          {/* Feed Section */}
+          <div className="space-y-4">
+            <h3 className="text-[10px] font-black uppercase tracking-widest text-zinc-500 px-2">{t.liveSafetyFeed}</h3>
+            <div className="space-y-3">
+              {filteredAlerts.map((alert: any) => (
+                <motion.div
+                  key={alert.id} layout initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }}
+                  onClick={() => setFocusedAlertId(focusedAlertId === alert.id ? null : alert.id)}
+                  className={`p-4 rounded-2xl border cursor-pointer transition-all ${focusedAlertId === alert.id ? 'bg-danger/10 border-danger' : theme === 'dark' ? 'bg-white/5 border-white/5 hover:border-white/20' : 'bg-zinc-50 border-zinc-100 hover:border-zinc-300'}`}
+                >
+                  <div className="flex justify-between items-start mb-2">
+                    <div className="flex flex-col gap-1">
+                      <span className={`text-[8px] font-black uppercase tracking-tighter px-2 py-0.5 rounded w-fit ${alert.type === 'danger' || alert.type === 'airstrike' ? 'bg-danger text-black' : alert.type === 'road_closure' ? 'bg-warning text-black' : 'bg-safety text-black'}`}>{alert.type === 'road_closure' ? t.roadClosure : alert.type}</span>
+                      <span className={`text-[7px] font-bold uppercase tracking-widest px-1.5 py-0.5 rounded border ${alert.isUserReported ? 'border-warning/50 text-warning bg-warning/5' : 'border-safety/50 text-safety bg-safety/5'}`}>
+                        {alert.type === 'road_closure' && !alert.isUserReported ? t.verifiedISF : alert.isUserReported ? t.communityAlert : t.nnaVerified}
+                      </span>
+                    </div>
+                    <span className="text-[8px] font-mono text-zinc-500">{alert.timestamp}</span>
+                  </div>
+                  <div className="flex items-center gap-1 mb-1"><MapPin className="w-3 h-3 text-zinc-500" /><p className={`text-xs font-bold ${theme === 'dark' ? 'text-white' : 'text-zinc-900'}`}>{alert.location} ({getDistrictName(alert.districtId)})</p></div>
+                  <p className="text-[10px] text-zinc-500 leading-relaxed">{alert.message}</p>
+                </motion.div>
+              ))}
             </div>
           </div>
         </div>
-      </motion.aside>
-    )}
-  </AnimatePresence>
+      </div>
+    </motion.div>
   );
-});
+};
 
 // --- Main App ---
 export default function App() {
@@ -1094,6 +1153,7 @@ export default function App() {
   const [shareToast, setShareToast] = useState(false);
   const [showWelcome, setShowWelcome] = useState(false);
   const [isQRModalOpen, setIsQRModalOpen] = useState(false);
+  const [isSOSModalOpen, setIsSOSModalOpen] = useState(false);
   const t = useMemo(() => TRANSLATIONS[language], [language]);
   const isRTL = useMemo(() => language === 'ar', [language]);
   const isMobile = typeof window !== 'undefined' && window.innerWidth < 1024;
@@ -1224,7 +1284,7 @@ export default function App() {
         />
 
       <main className="flex-1 flex flex-col relative min-w-0 h-full">
-        <header className={`sticky top-0 z-[1100] border-b backdrop-blur-xl ${theme === 'dark' ? 'bg-black/80 border-white/10' : 'bg-white/90 border-zinc-200'}`}>
+        <header className={`fixed top-0 left-0 right-0 z-[1100] backdrop-blur-xl transition-colors duration-500 ${theme === 'dark' ? 'bg-black/40 border-b border-white/10' : 'bg-white/60 border-b border-zinc-200'}`}>
           {!isOnline && (
             <div className="bg-zinc-800 text-white p-2 flex items-center justify-center gap-2 border-b border-white/5">
               <WifiOff className="w-3 h-3 text-zinc-400" />
@@ -1248,7 +1308,10 @@ export default function App() {
           )}
           <div className="max-w-4xl mx-auto p-4 space-y-4">
             <div className={`flex items-center justify-between ${isRTL ? 'flex-row-reverse' : ''}`}>
-              <motion.button whileTap={{ scale: 0.9 }} onClick={() => setIsSidebarOpen(true)} className={`p-2.5 rounded-xl border ${theme === 'dark' ? 'bg-white/5 border-white/10' : 'bg-zinc-100 border-zinc-200'}`}><Menu className="w-5 h-5" /></motion.button>
+              <div className="flex items-center gap-3">
+                <motion.button whileTap={{ scale: 0.9 }} onClick={() => setIsSidebarOpen(true)} className={`p-2.5 rounded-xl border ${theme === 'dark' ? 'bg-white/5 border-white/10' : 'bg-zinc-100 border-zinc-200'}`}><Menu className="w-5 h-5" /></motion.button>
+                <h1 className="text-xl font-black tracking-tighter uppercase italic hidden sm:block" style={{ textAlign: 'left', direction: 'ltr' }}>GUARDIAN</h1>
+              </div>
               <div className="flex-1 mx-4 relative">
                 <div className={`flex items-center gap-3 px-4 py-2.5 rounded-2xl border transition-all ${theme === 'dark' ? 'bg-white/5 border-white/10 focus-within:border-white/30' : 'bg-zinc-100 border-zinc-200 focus-within:border-zinc-400'}`}>
                   <Search className="w-4 h-4 text-zinc-500" />
@@ -1281,31 +1344,31 @@ export default function App() {
             <div className="flex gap-2 overflow-x-auto no-scrollbar pb-1">
               <button 
                 onClick={() => setActiveFilter(activeFilter === 'airstrike' ? null : 'airstrike')} 
-                className={`flex items-center gap-2 px-4 py-2 rounded-full border text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap ${activeFilter === 'airstrike' ? 'bg-danger text-black border-danger shadow-[0_0_15px_rgba(255,59,48,0.4)]' : 'bg-white/5 border-white/10 text-zinc-400 hover:border-white/30'}`}
+                className={`flex items-center gap-2 px-4 py-2.5 rounded-full border text-[10px] font-black uppercase tracking-widest transition-all backdrop-blur-md whitespace-nowrap min-h-[44px] ${activeFilter === 'airstrike' ? 'bg-danger text-black border-danger shadow-[0_0_15px_rgba(255,59,48,0.4)]' : theme === 'dark' ? 'bg-white/5 border-white/10 text-zinc-400 hover:border-white/30' : 'bg-zinc-100 border-zinc-200 text-zinc-500 hover:border-zinc-300'}`}
               >
                 <Flame className="w-3 h-3" />{t.airstrikes}
               </button>
               <button 
                 onClick={() => setActiveFilter(activeFilter === 'road_closure' ? null : 'road_closure')} 
-                className={`flex items-center gap-2 px-4 py-2 rounded-full border text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap ${activeFilter === 'road_closure' ? 'bg-warning text-black border-warning shadow-[0_0_15px_rgba(255,149,0,0.4)]' : 'bg-white/5 border-white/10 text-zinc-400 hover:border-white/30'}`}
+                className={`flex items-center gap-2 px-4 py-2.5 rounded-full border text-[10px] font-black uppercase tracking-widest transition-all backdrop-blur-md whitespace-nowrap min-h-[44px] ${activeFilter === 'road_closure' ? 'bg-warning text-black border-warning shadow-[0_0_15px_rgba(255,149,0,0.4)]' : theme === 'dark' ? 'bg-white/5 border-white/10 text-zinc-400 hover:border-white/30' : 'bg-zinc-100 border-zinc-200 text-zinc-500 hover:border-zinc-300'}`}
               >
                 <Construction className="w-3 h-3" />{t.roadStatus}
               </button>
               <button 
                 onClick={() => setActiveFilter(activeFilter === 'earthquake' ? null : 'earthquake')} 
-                className={`flex items-center gap-2 px-4 py-2 rounded-full border text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap ${activeFilter === 'earthquake' ? 'bg-purple-500 text-black border-purple-500 shadow-[0_0_15px_rgba(168,85,247,0.4)]' : 'bg-white/5 border-white/10 text-zinc-400 hover:border-white/30'}`}
+                className={`flex items-center gap-2 px-4 py-2.5 rounded-full border text-[10px] font-black uppercase tracking-widest transition-all backdrop-blur-md whitespace-nowrap min-h-[44px] ${activeFilter === 'earthquake' ? 'bg-purple-500 text-black border-purple-500 shadow-[0_0_15px_rgba(168,85,247,0.4)]' : theme === 'dark' ? 'bg-white/5 border-white/10 text-zinc-400 hover:border-white/30' : 'bg-zinc-100 border-zinc-200 text-zinc-500 hover:border-zinc-300'}`}
               >
                 <Waves className="w-3 h-3" />{t.earthquakes}
               </button>
-              <button onClick={() => setActiveFilter(activeFilter === 'all' ? null : 'all')} className={`flex items-center gap-2 px-4 py-2 rounded-full border text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap ${activeFilter === 'all' ? 'bg-white text-black border-white' : 'bg-white/5 border-white/10 text-zinc-400 hover:border-white/30'}`}><Shield className="w-3 h-3" />{t.allResources}</button>
+              <button onClick={() => setActiveFilter(activeFilter === 'all' ? null : 'all')} className={`flex items-center gap-2 px-4 py-2.5 rounded-full border text-[10px] font-black uppercase tracking-widest transition-all backdrop-blur-md whitespace-nowrap min-h-[44px] ${activeFilter === 'all' ? 'bg-white text-black border-white' : theme === 'dark' ? 'bg-white/5 border-white/10 text-zinc-400 hover:border-white/30' : 'bg-zinc-100 border-zinc-200 text-zinc-500 hover:border-zinc-300'}`}><Shield className="w-3 h-3" />{t.allResources}</button>
               <button 
                 onClick={() => setActiveFilter(activeFilter === 'food_water' ? null : 'food_water')} 
-                className={`flex items-center gap-2 px-4 py-2 rounded-full border text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap ${activeFilter === 'food_water' ? 'bg-safety text-black border-safety shadow-[0_0_15px_rgba(52,199,89,0.4)]' : 'bg-white/5 border-white/10 text-zinc-400 hover:border-white/30'}`}
+                className={`flex items-center gap-2 px-4 py-2.5 rounded-full border text-[10px] font-black uppercase tracking-widest transition-all backdrop-blur-md whitespace-nowrap min-h-[44px] ${activeFilter === 'food_water' ? 'bg-safety text-black border-safety shadow-[0_0_15px_rgba(52,199,89,0.4)]' : theme === 'dark' ? 'bg-white/5 border-white/10 text-zinc-400 hover:border-white/30' : 'bg-zinc-100 border-zinc-200 text-zinc-500 hover:border-zinc-300'}`}
               >
                 <Package className="w-3 h-3" />{t.foodWater}
               </button>
               {['hospital', 'bakery', 'pharmacy', 'fuel', 'tools', 'ngo'].map(type => (
-                <button key={type} onClick={() => setActiveFilter(activeFilter === type ? null : type)} className={`flex items-center gap-2 px-4 py-2 rounded-full border text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap ${activeFilter === type ? 'bg-white text-black border-white' : 'bg-white/5 border-white/10 text-zinc-400 hover:border-white/30'}`}>
+                <button key={type} onClick={() => setActiveFilter(activeFilter === type ? null : type)} className={`flex items-center gap-2 px-4 py-2.5 rounded-full border text-[10px] font-black uppercase tracking-widest transition-all backdrop-blur-md whitespace-nowrap min-h-[44px] ${activeFilter === type ? 'bg-white text-black border-white' : theme === 'dark' ? 'bg-white/5 border-white/10 text-zinc-400 hover:border-white/30' : 'bg-zinc-100 border-zinc-200 text-zinc-500 hover:border-zinc-300'}`}>
                   {type === 'hospital' ? <Hospital className="w-3 h-3" /> : 
                    type === 'bakery' ? <Utensils className="w-3 h-3" /> : 
                    type === 'pharmacy' ? <Pill className="w-3 h-3" /> : 
@@ -1337,33 +1400,34 @@ export default function App() {
             </div>
           )}
 
-          <div className="absolute bottom-8 left-1/2 -translate-x-1/2 w-full max-w-2xl px-4 z-[1000]">
-            <div className={`p-6 rounded-[2.5rem] border shadow-2xl backdrop-blur-2xl ${theme === 'dark' ? 'bg-black/60 border-white/10' : 'bg-white/80 border-zinc-200'}`}>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
-                <div className="space-y-2">
-                  <label className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">{t.startPoint}</label>
-                  <select value={startDistrict} onChange={(e) => setStartDistrict(e.target.value)} className={`w-full border rounded-2xl p-4 text-sm focus:outline-none focus:ring-2 focus:ring-safety/50 appearance-none ${theme === 'dark' ? 'bg-black border-white/10 text-white' : 'bg-zinc-50 border-zinc-200 text-zinc-900'}`}>
-                    <option value="">{t.selectDistrict}</option>
-                    {districts.map(d => <option key={d.id} value={d.id}>{getDistrictName(d.id)}</option>)}
-                  </select>
-                </div>
-                <div className="space-y-2">
-                  <label className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">{t.destination}</label>
-                  <select value={endDistrict} onChange={(e) => setEndDistrict(e.target.value)} className={`w-full border rounded-2xl p-4 text-sm focus:outline-none focus:ring-2 focus:ring-safety/50 appearance-none ${theme === 'dark' ? 'bg-black border-white/10 text-white' : 'bg-zinc-50 border-zinc-200 text-zinc-900'}`}>
-                    <option value="">{t.selectDistrict}</option>
-                    {districts.map(d => <option key={d.id} value={d.id}>{getDistrictName(d.id)}</option>)}
-                  </select>
-                </div>
-              </div>
-              <div className="flex flex-col sm:flex-row gap-3">
-                <motion.button whileTap={{ scale: 0.95 }} onClick={() => setIsReportingMode(true)} className="flex-1 flex items-center justify-center gap-2 bg-danger text-black font-bold px-6 py-4 rounded-2xl hover:bg-danger/90 transition-all shadow-lg"><AlertTriangle className="w-5 h-5" />{t.report}</motion.button>
-                <motion.button whileTap={{ scale: 0.95 }} onClick={calculateSafestRoute} disabled={!startDistrict || !endDistrict || isRouting} className={`flex-1 flex items-center justify-center gap-2 font-bold px-8 py-4 rounded-2xl transition-all shadow-lg ${startDistrict && endDistrict && !isRouting ? 'bg-safety text-black hover:bg-safety/90' : 'bg-zinc-800 text-zinc-500 cursor-not-allowed'}`}>{isRouting ? <><Activity className="w-5 h-5 animate-spin" />{t.routing}</> : <><Navigation className="w-5 h-5" />{t.findSafestPath}</>}</motion.button>
-                {routePath.length > 0 && <motion.button whileTap={{ scale: 0.95 }} onClick={handleShare} className="bg-zinc-800 text-white p-4 rounded-2xl hover:bg-zinc-700 transition-all shadow-lg"><Share2 className="w-5 h-5" /></motion.button>}
-              </div>
-            </div>
+          {/* FABs */}
+          <div className="absolute bottom-32 right-6 z-[1000] flex flex-col gap-4">
+            <motion.button 
+              whileTap={{ scale: 0.9 }}
+              onClick={() => setIsSOSModalOpen(true)}
+              className="w-16 h-16 rounded-full bg-danger flex items-center justify-center shadow-[0_0_30px_rgba(255,59,48,0.5)] border-4 border-white/20"
+            >
+              <Phone className="w-8 h-8 text-black" />
+            </motion.button>
           </div>
+
+          <BottomSheet 
+            theme={theme} t={t} isRTL={isRTL} districts={districts} 
+            startDistrict={startDistrict} setStartDistrict={setStartDistrict}
+            endDistrict={endDistrict} setEndDistrict={setEndDistrict}
+            getDistrictName={getDistrictName} calculateSafestRoute={calculateSafestRoute}
+            isRouting={isRouting} routePath={routePath} handleShare={handleShare}
+            filteredAlerts={filteredAlerts} focusedAlertId={focusedAlertId}
+            setFocusedAlertId={setFocusedAlertId} setIsReportModalOpen={setIsReportModalOpen}
+          />
         </div>
       </main>
+
+      <SOSModal 
+        isOpen={isSOSModalOpen} 
+        onClose={() => setIsSOSModalOpen(false)} 
+        t={t} isRTL={isRTL} theme={theme} 
+      />
 
         {/* Settings Modal */}
         <AnimatePresence>
