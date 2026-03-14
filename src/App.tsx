@@ -1,3 +1,4 @@
+import 'leaflet/dist/leaflet.css';
 import React, { useState, useEffect, useMemo, Fragment, useCallback, useRef } from 'react';
 import { 
   Phone,
@@ -54,7 +55,6 @@ import {
   Circle
 } from 'react-leaflet';
 import L from 'leaflet';
-import 'leaflet/dist/leaflet.css';
 import 'leaflet.markercluster/dist/MarkerCluster.css';
 import 'leaflet.markercluster/dist/MarkerCluster.Default.css';
 import MarkerClusterGroup from 'react-leaflet-cluster';
@@ -933,31 +933,6 @@ const BottomSheet = ({
             </motion.button>
           </div>
 
-          {/* Routing Section */}
-          <div className="space-y-6">
-            <h3 className="text-[10px] font-black uppercase tracking-widest text-zinc-500 px-2">{t.routeFinding}</h3>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <label className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">{t.startPoint}</label>
-                <select value={startDistrict} onChange={(e) => setStartDistrict(e.target.value)} className={`w-full border rounded-2xl p-4 text-sm focus:outline-none focus:ring-2 focus:ring-safety/50 appearance-none ${theme === 'dark' ? 'bg-white/5 border-white/10 text-white' : 'bg-zinc-50 border-zinc-200 text-zinc-900'}`}>
-                  <option value="">{t.selectDistrict}</option>
-                  {districts.map((d: any) => <option key={d.id} value={d.id}>{getDistrictName(d.id)}</option>)}
-                </select>
-              </div>
-              <div className="space-y-2">
-                <label className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">{t.destination}</label>
-                <select value={endDistrict} onChange={(e) => setEndDistrict(e.target.value)} className={`w-full border rounded-2xl p-4 text-sm focus:outline-none focus:ring-2 focus:ring-safety/50 appearance-none ${theme === 'dark' ? 'bg-white/5 border-white/10 text-white' : 'bg-zinc-50 border-zinc-200 text-zinc-900'}`}>
-                  <option value="">{t.selectDistrict}</option>
-                  {districts.map((d: any) => <option key={d.id} value={d.id}>{getDistrictName(d.id)}</option>)}
-                </select>
-              </div>
-            </div>
-            <div className="flex gap-3">
-              <motion.button whileTap={{ scale: 0.95 }} onClick={calculateSafestRoute} disabled={!startDistrict || !endDistrict || isRouting} className={`flex-1 flex items-center justify-center gap-2 font-bold px-8 py-4 rounded-2xl transition-all shadow-lg ${startDistrict && endDistrict && !isRouting ? 'bg-safety text-black hover:bg-safety/90' : 'bg-zinc-800 text-zinc-500 cursor-not-allowed'}`}>{isRouting ? <><Activity className="w-5 h-5 animate-spin" />{t.routing}</> : <><Navigation className="w-5 h-5" />{t.findSafestPath}</>}</motion.button>
-              {routePath.length > 0 && <motion.button whileTap={{ scale: 0.95 }} onClick={handleShare} className="bg-zinc-800 text-white p-4 rounded-2xl hover:bg-zinc-700 transition-all shadow-lg"><Share2 className="w-5 h-5" /></motion.button>}
-            </div>
-          </div>
-
           {/* Feed Section */}
           <div className="space-y-4">
             <h3 className="text-[10px] font-black uppercase tracking-widest text-zinc-500 px-2">{t.liveSafetyFeed}</h3>
@@ -1324,10 +1299,11 @@ export default function App() {
           onStartVideoCall={handleStartVideoCall}
         />
 
-      <main className="flex-1 flex flex-col relative min-w-0 h-full">
-        <header className={`fixed top-0 left-0 right-0 z-[1100] backdrop-blur-2xl transition-colors duration-500 ${theme === 'dark' ? 'bg-[#121212]/40 border-b border-white/10' : 'bg-white/60 border-b border-zinc-200'}`}>
+      <main className="relative h-[100dvh] w-full overflow-hidden">
+        {/* Floating UI Layer */}
+        <div className="absolute top-0 left-0 right-0 z-[2000] pointer-events-none flex flex-col">
           {!isOnline && (
-            <div className="bg-zinc-800 text-white p-2 flex items-center justify-center gap-2 border-b border-white/5">
+            <div className="bg-zinc-800 text-white p-2 flex items-center justify-center gap-2 border-b border-white/5 pointer-events-auto">
               <WifiOff className="w-3 h-3 text-zinc-400" />
               <span className="text-[10px] font-black uppercase tracking-widest">{t.workingOffline}</span>
             </div>
@@ -1336,7 +1312,7 @@ export default function App() {
             <motion.div 
               initial={{ height: 0, opacity: 0 }}
               animate={{ height: 'auto', opacity: 1 }}
-              className="bg-danger text-black p-3 flex flex-col items-center justify-center gap-1 border-b border-black/20"
+              className="bg-danger text-black p-3 flex flex-col items-center justify-center gap-1 border-b border-black/20 pointer-events-auto"
             >
               <div className="flex items-center gap-2">
                 <Waves className="w-5 h-5 animate-bounce" />
@@ -1347,70 +1323,111 @@ export default function App() {
               <p className="text-[9px] font-black mt-1">M{seismicAlert.mag} - {seismicAlert.place}</p>
             </motion.div>
           )}
-          <div className="max-w-4xl mx-auto p-4 space-y-4">
-            <div className={`flex items-center justify-between ${isRTL ? 'flex-row-reverse' : ''}`}>
-              <div className="flex items-center gap-3">
-                <h1 className="text-2xl font-black tracking-tighter uppercase italic" style={{ textAlign: 'left', direction: 'ltr' }}>GUARDIAN</h1>
-              </div>
-              <div className="flex-1 mx-4 relative">
-                <div className={`flex items-center gap-3 px-4 py-3 rounded-[24px] border transition-all ${theme === 'dark' ? 'bg-white/5 border-white/10 focus-within:border-white/30' : 'bg-zinc-100 border-zinc-200 focus-within:border-zinc-400'}`}>
-                  <Search className="w-4 h-4 text-zinc-500" />
-                  <input 
-                    type="text" placeholder={t.searchPlaceholder} value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)}
-                    className="bg-transparent border-none outline-none w-full text-sm font-medium"
-                  />
+
+          <div className="p-4 space-y-4 max-w-4xl mx-auto w-full">
+            {/* Glassmorphism Floating Card */}
+            <div className={`pointer-events-auto backdrop-blur-xl rounded-[32px] border p-4 shadow-2xl space-y-4 transition-colors duration-500 ${theme === 'dark' ? 'bg-[#121212]/60 border-white/10' : 'bg-white/70 border-zinc-200'}`}>
+              <div className={`flex items-center justify-between ${isRTL ? 'flex-row-reverse' : ''}`}>
+                <div className="flex items-center gap-3 shrink-0">
+                  <h1 className="text-xl font-black tracking-tighter uppercase italic" style={{ textAlign: 'left', direction: 'ltr' }}>GUARDIAN</h1>
                 </div>
-                <AnimatePresence>
-                  {searchResults.length > 0 && (
-                    <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 10 }} className={`absolute top-full left-0 right-0 mt-2 rounded-[24px] border shadow-2xl overflow-hidden z-[1200] ${theme === 'dark' ? 'bg-zinc-900 border-white/10' : 'bg-white border-zinc-200'}`}>
-                      {searchResults.map((loc, i) => (
-                        <button key={i} onClick={() => { 
-                          setSearchQuery(''); 
-                          setFocusedAlertId(null);
-                          setSearchLocation(loc.coords as [number, number]);
-                        }} className={`w-full p-5 text-left flex items-center gap-3 hover:bg-zinc-800 transition-colors ${i !== searchResults.length - 1 ? 'border-b border-white/5' : ''} ${isRTL ? 'flex-row-reverse text-right' : ''}`}>
-                          <MapPin className="w-4 h-4 text-zinc-500" />
-                          <div><p className="text-sm font-bold">{language === 'ar' ? loc.ar : (language === 'fr' && loc.fr ? loc.fr : loc.name)}</p><p className="text-[10px] text-zinc-500">{language === 'en' ? loc.ar : loc.name}</p></div>
-                        </button>
-                      ))}
-                    </motion.div>
-                  )}
-                </AnimatePresence>
+                
+                <div className="flex-1 mx-4 relative">
+                  <div className={`flex items-center gap-3 px-4 py-2.5 rounded-[20px] border transition-all ${theme === 'dark' ? 'bg-white/5 border-white/10 focus-within:border-white/30' : 'bg-zinc-100 border-zinc-200 focus-within:border-zinc-400'}`}>
+                    <Search className="w-4 h-4 text-zinc-500" />
+                    <input 
+                      type="text" placeholder={t.searchPlaceholder} value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)}
+                      className="bg-transparent border-none outline-none w-full text-sm font-medium"
+                    />
+                  </div>
+                  <AnimatePresence>
+                    {searchResults.length > 0 && (
+                      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 10 }} className={`absolute top-full left-0 right-0 mt-2 rounded-[24px] border shadow-2xl overflow-hidden z-[2100] ${theme === 'dark' ? 'bg-zinc-900 border-white/10' : 'bg-white border-zinc-200'}`}>
+                        {searchResults.map((loc, i) => (
+                          <button key={i} onClick={() => { 
+                            setSearchQuery(''); 
+                            setFocusedAlertId(null);
+                            setSearchLocation(loc.coords as [number, number]);
+                          }} className={`w-full p-4 text-left flex items-center gap-3 hover:bg-zinc-800 transition-colors ${i !== searchResults.length - 1 ? 'border-b border-white/5' : ''} ${isRTL ? 'flex-row-reverse text-right' : ''}`}>
+                            <MapPin className="w-4 h-4 text-zinc-500" />
+                            <div><p className="text-sm font-bold">{language === 'ar' ? loc.ar : (language === 'fr' && loc.fr ? loc.fr : loc.name)}</p><p className="text-[10px] text-zinc-500">{language === 'en' ? loc.ar : loc.name}</p></div>
+                          </button>
+                        ))}
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
+
+                <motion.button whileTap={{ scale: 0.9 }} onClick={() => setIsSettingsOpen(true)} className={`p-2.5 rounded-[20px] border shrink-0 ${theme === 'dark' ? 'bg-white/5 border-white/10' : 'bg-zinc-100 border-zinc-200'}`}><SettingsIcon className="w-5 h-5" /></motion.button>
               </div>
-              <div className="flex items-center gap-2">
-                <motion.button whileTap={{ scale: 0.9 }} onClick={() => setIsSettingsOpen(true)} className={`p-3 rounded-[24px] border ${theme === 'dark' ? 'bg-white/5 border-white/10' : 'bg-zinc-100 border-zinc-200'}`}><SettingsIcon className="w-6 h-6" /></motion.button>
+
+              {/* Route Boxes in Floating Card */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                <div className="relative">
+                  <select value={startDistrict} onChange={(e) => setStartDistrict(e.target.value)} className={`w-full border rounded-xl px-4 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-safety/50 appearance-none ${theme === 'dark' ? 'bg-white/5 border-white/10 text-white' : 'bg-zinc-50 border-zinc-200 text-zinc-900'}`}>
+                    <option value="">{t.startPoint}</option>
+                    {districts.map((d: any) => <option key={d.id} value={d.id}>{getDistrictName(d.id)}</option>)}
+                  </select>
+                </div>
+                <div className="relative">
+                  <select value={endDistrict} onChange={(e) => setEndDistrict(e.target.value)} className={`w-full border rounded-xl px-4 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-safety/50 appearance-none ${theme === 'dark' ? 'bg-white/5 border-white/10 text-white' : 'bg-zinc-50 border-zinc-200 text-zinc-900'}`}>
+                    <option value="">{t.destination}</option>
+                    {districts.map((d: any) => <option key={d.id} value={d.id}>{getDistrictName(d.id)}</option>)}
+                  </select>
+                </div>
+              </div>
+              
+              <div className="flex gap-2">
+                <motion.button 
+                  whileTap={{ scale: 0.98 }} 
+                  onClick={calculateSafestRoute} 
+                  disabled={!startDistrict || !endDistrict || isRouting} 
+                  className={`flex-1 flex items-center justify-center gap-2 font-bold py-2.5 rounded-xl transition-all text-xs ${startDistrict && endDistrict && !isRouting ? 'bg-safety text-black hover:bg-safety/90' : 'bg-zinc-800 text-zinc-500 cursor-not-allowed'}`}
+                >
+                  {isRouting ? <Activity className="w-4 h-4 animate-spin" /> : <Navigation className="w-4 h-4" />}
+                  {isRouting ? t.routing : t.findSafestPath}
+                </motion.button>
+                {routePath.length > 0 && (
+                  <motion.button whileTap={{ scale: 0.95 }} onClick={handleShare} className="bg-zinc-800 text-white p-2.5 rounded-xl hover:bg-zinc-700 transition-all">
+                    <Share2 className="w-4 h-4" />
+                  </motion.button>
+                )}
               </div>
             </div>
-            <div className="flex gap-2 overflow-x-auto no-scrollbar pb-2">
-              <button 
-                onClick={() => setActiveFilter(activeFilter === 'airstrike' ? null : 'airstrike')} 
-                className={`flex items-center gap-2 px-6 py-3 rounded-full border text-[10px] font-black uppercase tracking-widest transition-all backdrop-blur-md whitespace-nowrap min-h-[44px] ${activeFilter === 'airstrike' ? 'bg-danger text-black border-danger shadow-[0_0_20px_rgba(255,59,48,0.3)]' : theme === 'dark' ? 'bg-white/5 border-white/10 text-zinc-400 hover:border-white/30' : 'bg-zinc-100 border-zinc-200 text-zinc-500 hover:border-zinc-300'}`}
-              >
-                <Flame className="w-4 h-4" />{t.airstrikes}
-              </button>
-              <button 
-                onClick={() => setActiveFilter(activeFilter === 'road_closure' ? null : 'road_closure')} 
-                className={`flex items-center gap-2 px-6 py-3 rounded-full border text-[10px] font-black uppercase tracking-widest transition-all backdrop-blur-md whitespace-nowrap min-h-[44px] ${activeFilter === 'road_closure' ? 'bg-warning text-black border-warning shadow-[0_0_20px_rgba(255,149,0,0.3)]' : theme === 'dark' ? 'bg-white/5 border-white/10 text-zinc-400 hover:border-white/30' : 'bg-zinc-100 border-zinc-200 text-zinc-500 hover:border-zinc-300'}`}
-              >
-                <Construction className="w-4 h-4" />{t.roadStatus}
-              </button>
-              <button 
-                onClick={() => setActiveFilter(activeFilter === 'earthquake' ? null : 'earthquake')} 
-                className={`flex items-center gap-2 px-6 py-3 rounded-full border text-[10px] font-black uppercase tracking-widest transition-all backdrop-blur-md whitespace-nowrap min-h-[44px] ${activeFilter === 'earthquake' ? 'bg-purple-500 text-black border-purple-500 shadow-[0_0_20px_rgba(168,85,247,0.3)]' : theme === 'dark' ? 'bg-white/5 border-white/10 text-zinc-400 hover:border-white/30' : 'bg-zinc-100 border-zinc-200 text-zinc-500 hover:border-zinc-300'}`}
-              >
-                <Waves className="w-4 h-4" />{t.earthquakes}
-              </button>
-              <button 
-                onClick={() => setActiveFilter(activeFilter === 'ngo' ? null : 'ngo')} 
-                className={`flex items-center gap-2 px-6 py-3 rounded-full border text-[10px] font-black uppercase tracking-widest transition-all backdrop-blur-md whitespace-nowrap min-h-[44px] ${activeFilter === 'ngo' ? 'bg-safety text-black border-safety shadow-[0_0_20px_rgba(52,199,89,0.3)]' : theme === 'dark' ? 'bg-white/5 border-white/10 text-zinc-400 hover:border-white/30' : 'bg-zinc-100 border-zinc-200 text-zinc-500 hover:border-zinc-300'}`}
-              >
-                <HandHeart className="w-4 h-4" />NGOs
-              </button>
+
+            {/* Filter Bar (Top-Middle) */}
+            <div className="pointer-events-auto flex justify-center w-full">
+              <div className="flex gap-2 overflow-x-auto no-scrollbar pb-2 max-w-full px-4">
+                <button 
+                  onClick={() => setActiveFilter(activeFilter === 'airstrike' ? null : 'airstrike')} 
+                  className={`flex items-center gap-2 px-5 py-2.5 rounded-full border text-[9px] font-black uppercase tracking-widest transition-all backdrop-blur-md whitespace-nowrap ${activeFilter === 'airstrike' ? 'bg-danger text-black border-danger shadow-lg' : theme === 'dark' ? 'bg-black/40 border-white/10 text-zinc-400 hover:border-white/30' : 'bg-white/60 border-zinc-200 text-zinc-500 hover:border-zinc-300'}`}
+                >
+                  <Flame className="w-3.5 h-3.5" />{t.airstrikes}
+                </button>
+                <button 
+                  onClick={() => setActiveFilter(activeFilter === 'road_closure' ? null : 'road_closure')} 
+                  className={`flex items-center gap-2 px-5 py-2.5 rounded-full border text-[9px] font-black uppercase tracking-widest transition-all backdrop-blur-md whitespace-nowrap ${activeFilter === 'road_closure' ? 'bg-warning text-black border-warning shadow-lg' : theme === 'dark' ? 'bg-black/40 border-white/10 text-zinc-400 hover:border-white/30' : 'bg-white/60 border-zinc-200 text-zinc-500 hover:border-zinc-300'}`}
+                >
+                  <Construction className="w-3.5 h-3.5" />{t.roadStatus}
+                </button>
+                <button 
+                  onClick={() => setActiveFilter(activeFilter === 'earthquake' ? null : 'earthquake')} 
+                  className={`flex items-center gap-2 px-5 py-2.5 rounded-full border text-[9px] font-black uppercase tracking-widest transition-all backdrop-blur-md whitespace-nowrap ${activeFilter === 'earthquake' ? 'bg-purple-500 text-black border-purple-500 shadow-lg' : theme === 'dark' ? 'bg-black/40 border-white/10 text-zinc-400 hover:border-white/30' : 'bg-white/60 border-zinc-200 text-zinc-500 hover:border-zinc-300'}`}
+                >
+                  <Waves className="w-3.5 h-3.5" />{t.earthquakes}
+                </button>
+                <button 
+                  onClick={() => setActiveFilter(activeFilter === 'ngo' ? null : 'ngo')} 
+                  className={`flex items-center gap-2 px-5 py-2.5 rounded-full border text-[9px] font-black uppercase tracking-widest transition-all backdrop-blur-md whitespace-nowrap ${activeFilter === 'ngo' ? 'bg-safety text-black border-safety shadow-lg' : theme === 'dark' ? 'bg-black/40 border-white/10 text-zinc-400 hover:border-white/30' : 'bg-white/60 border-zinc-200 text-zinc-500 hover:border-zinc-300'}`}
+                >
+                  <HandHeart className="w-3.5 h-3.5" />NGOs
+                </button>
+              </div>
             </div>
           </div>
-        </header>
+        </div>
 
-        <div className="flex-1 relative">
+        <div className="absolute inset-0 z-0 h-[100dvh] w-full">
           <MapComponent 
             theme={!isOnline ? 'dark' : theme} alerts={alerts} services={services} earthquakes={earthquakes} activeFilter={activeFilter} routePath={routePath} 
             focusedAlertId={focusedAlertId} setFocusedAlertId={setFocusedAlertId} onBoundsChange={setMapBounds} 
@@ -1428,8 +1445,8 @@ export default function App() {
             </div>
           )}
 
-          {/* FABs */}
-          <div className="absolute bottom-32 right-6 z-[1000] flex flex-col gap-4">
+          {/* SOS Button (Bottom Right) */}
+          <div className="absolute bottom-32 right-6 z-[2000]">
             <motion.button 
               whileTap={{ scale: 0.9 }}
               onClick={() => setIsSOSModalOpen(true)}
